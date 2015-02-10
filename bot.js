@@ -2,8 +2,6 @@ var _ = require('underscore');
 var Scraper = require('./scraper');
 var Pages = [];
 
-// start = 6 ; end = 3341
-
 function generateUrls(start, end) {
   var url = "";
   var schoolSubPages = [];
@@ -19,6 +17,7 @@ function generateUrls(start, end) {
   return allPages;
 };
 
+// start = 6 ; end = 3341 for the full collection of college data
 Pages = generateUrls(162, 163);
 
 function wizard() {
