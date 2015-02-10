@@ -44,7 +44,7 @@ function wizard() {
     // we want to store the results
     scraper.on('complete', function (listing) {
 
-      // use fs.writefilesync here to generate a file
+      // use fs.writefilesync here to generate a file or write directly to our mongoDB
       if (listing) {
         console.log('writing this listing: ', listing);
       }
