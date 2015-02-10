@@ -142,6 +142,7 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
     schoolData.specificAdmissionsData = {};
     console.log('page 2')
 
+    schoolData.idNumber = schoolId;
     schoolData.specificAdmissionsData.GPA = {
       average: $('.onecolumntable').eq(-4).find('td').eq(-7).text(),
       range1: {
@@ -385,6 +386,7 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
     var len = $('.onecolumntable').eq(-9).find('td').find('a').length;
     schoolData.tuition = {};
 
+    schoolData.idNumber = schoolId;
     schoolData.tuition.financialAid = {
       website: len > 2 ? $('.onecolumntable').eq(-9).find('td').find('a')[len - 2].href : null,
       netPriceCalculator: len > 1 ? $('.onecolumntable').eq(-9).find('td').find('a')[len - 1].href : null,
@@ -418,7 +420,8 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
   } else if (index === 3 ) {
 
     console.log('page 4');
-      
+    
+    schoolData.idNumber = schoolId;
     schoolData.undergraduateMajors = $('.collist').find('li').map(function(i, el) { return $(this).text().trim() }).get();
     schoolData.mostPopularMajors = $('.onecolumntable').eq(-11).find('td').eq(-5).text().split(',').map(function(el, i) { return el.trim() });
     schoolData.studyAbroad = $('.onecolumntable').eq(-11).find('td').eq(-2).text().indexOf('Offered') > -1 ? true : false;
@@ -430,6 +433,7 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
 
     console.log('page 5');
 
+    schoolData.idNumber = schoolId;
     schoolData.campusSetting = {
       localPopulation: $('.onecolumntable').eq(-10).find('td').eq(-4).text(),
       environment: $('.onecolumntable').eq(-10).find('td').eq(-2).text(),
@@ -472,6 +476,7 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
 
     console.log('page 6');
         
+    schoolData.idNumber = schoolId;
     schoolData.demographics = $('.onecolumntable').eq(-3).find('td').eq(-4).html().indexOf('Not reported') === -1 ? $('.onecolumntable').eq(-3).find('td').eq(-4).html().split('<br>').map(function(el, i) { return { race : el.split('%')[1].trim(), percentage: parseFloat(el) }}) : null;
     schoolData.percentInternationalStudents = $('onecolumntable').eq(-3).find('td').eq(-3).text().split('%')[0];
     schoolData.averageStudentAge = $('.onecolumntable').eq(-3).find('td').eq(-2).text();
