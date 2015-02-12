@@ -1,7 +1,7 @@
 # collegeData
 scraping all the college data
 
-% npm install
+$ npm install
 
 $ node bot.js
 
