@@ -20,7 +20,7 @@ function generateUrls(start, end) {
 };
 
 // start = 6 ; end = 3341 for the full collection of college data
-Pages = generateUrls(6, 3341);
+Pages = generateUrls(6, 1000);
 
 function wizard() {
   // if the Pages array is empty, we are Done!!
@@ -30,9 +30,14 @@ function wizard() {
 
   var urlArray = Pages.pop();
 
+  setTimeout(function(){
+
+  })
   _.each(urlArray, function(element, index, list) {
     var schoolId = element.split('=').pop();
-    fs.writeFile('data/' + schoolId + '.json', JSON.stringify({idNumber: schoolId}));
+    if ( !fs.existsSync("data/" + schoolId + '.json') ) {  
+      fs.writeFile('data/' + schoolId + '.json', JSON.stringify({idNumber: schoolId}));
+    }
     var scraper = new Scraper(element, index, schoolId);  
     console.log('Colleges Left - ' + Pages.length);
 
@@ -57,8 +62,10 @@ function wizard() {
   })
 };
 
-var numberOfParallelRequests = 5;
+var numberOfParallelRequests = 1;
 
-for (var i = 0; i < numberOfParallelRequests; i++) {
-  wizard();
-}
+setTimeout(function(){  
+  for (var i = 0; i < numberOfParallelRequests; i++) {
+    wizard();
+  }
+}, 5000)

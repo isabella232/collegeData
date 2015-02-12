@@ -31,8 +31,6 @@ Scraper.prototype.init = function () {
     var model;
     var self = this;
 
-    console.log(self);
-
     self.on('loaded', function (html) {
         model = self.parsePage(html, self.index, self.schoolId);
         self.emit('complete', model);
@@ -47,7 +45,7 @@ Scraper.prototype.loadWebPage = function () {
     var body = '';
 
     if(res.statusCode !== 200) {
-      return self.emit('error', STATUS_CODES[res.statusCode]);
+      return self.emit('error', res.statusCode);
     }
 
     res.on('data', function (chunk) {
@@ -71,12 +69,10 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
   var $ = cheerio.load(html);
   if ( fs.existsSync("data/" + schoolId + '.json') ) {  
     var schoolData = jsop("data/" + schoolId + '.json');
-  } else {
-    schoolData = undefined;
   }
 
 
-  if ($('#getSavedSearch').text().trim().indexOf('Get') != -1) {
+  if ($('#getSavedSearch').text().trim().indexOf('Get') != -1 || $('#college411').length > 0) {
     console.log('this is the file path ', fs.existsSync("data/" + schoolId + '.json'));
     fs.existsSync("data/" + schoolId + '.json') ? fs.unlinkSync('data/' + schoolId + '.json') : console.log('already deleted ', "data/" + schoolId + '.json')
     return
