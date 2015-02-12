@@ -3,6 +3,7 @@ var cheerio = require('cheerio');
 var util = require('util');
 var _ = require('underscore');
 var fs = require('fs');
+var jsop = require('jsop');
 var EventEmitter = require('events').EventEmitter;
 
 /* 
@@ -68,16 +69,22 @@ Scraper.prototype.loadWebPage = function () {
 **/
 Scraper.prototype.parsePage = function (html, index, schoolId) {
   var $ = cheerio.load(html);
-  var schoolData = {}
+  if ( fs.existsSync("data/" + schoolId + '.json') ) {  
+    var schoolData = jsop("data/" + schoolId + '.json');
+  } else {
+    schoolData = undefined;
+  }
 
 
   if ($('#getSavedSearch').text().trim().indexOf('Get') != -1) {
+    console.log('this is the file path ', fs.existsSync("data/" + schoolId + '.json'));
+    fs.existsSync("data/" + schoolId + '.json') ? fs.unlinkSync('data/' + schoolId + '.json') : console.log('already deleted ', "data/" + schoolId + '.json')
     return
   }
 
-  if (index === 0 ) {
+  if ( index === 0 ) {
 
-    console.log('main page');
+    console.log('main page - id # ', schoolId);
 
     schoolData.idNumber = schoolId;
     schoolData.name = $('.cp_left').find('h1').text();
@@ -472,9 +479,9 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
       ROTC: $('.onecolumntable').eq(-1).find('td').eq(-1).text()
     }
 
-  } else if (index === 5 ) {
+  } else if ( index === 5 ) {
 
-    console.log('page 6');
+    console.log('page 6 - id # ', schoolId);
         
     schoolData.idNumber = schoolId;
     schoolData.demographics = $('.onecolumntable').eq(-3).find('td').eq(-4).html().indexOf('Not reported') === -1 ? $('.onecolumntable').eq(-3).find('td').eq(-4).html().split('<br>').map(function(el, i) { return { race : el.split('%')[1].trim(), percentage: parseFloat(el) }}) : null;

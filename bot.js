@@ -1,5 +1,7 @@
 var _ = require('underscore');
 var Scraper = require('./scraper');
+var fs = require('fs');
+var jsop = require('jsop');
 var Pages = [];
 
 function generateUrls(start, end) {
@@ -18,7 +20,7 @@ function generateUrls(start, end) {
 };
 
 // start = 6 ; end = 3341 for the full collection of college data
-Pages = generateUrls(162, 163);
+Pages = generateUrls(6, 3341);
 
 function wizard() {
   // if the Pages array is empty, we are Done!!
@@ -30,6 +32,7 @@ function wizard() {
 
   _.each(urlArray, function(element, index, list) {
     var schoolId = element.split('=').pop();
+    fs.writeFile('data/' + schoolId + '.json', JSON.stringify({idNumber: schoolId}));
     var scraper = new Scraper(element, index, schoolId);  
     console.log('Colleges Left - ' + Pages.length);
 
@@ -44,7 +47,7 @@ function wizard() {
     // we want to store the results
     scraper.on('complete', function (listing) {
 
-      // use fs.writefilesync here to generate a file
+      // use fs.writefilesync here to generate a file or write directly to our mongoDB
       if (listing) {
         console.log('writing this listing: ', listing);
       }
