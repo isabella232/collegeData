@@ -85,7 +85,6 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
     schoolData.idNumber = schoolId;
     schoolData.name = $('.cp_left').find('h1').text();
     schoolData.citystate = $('.cp_left').find('.citystate').text().trim();
-    // schoolData.descript = $('.overviewtext').text();
     schoolData.website = $('.onecolumntable').eq(-7).find('td > a').text();
     schoolData.schoolType = $('.onecolumntable').eq(-7).find('td').eq(-6).text();
     schoolData.coed = $('.onecolumntable').eq(-7).find('td').eq(-5).text();
