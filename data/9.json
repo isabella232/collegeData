@@ -1,0 +1,462 @@
+{
+  "idNumber": "9",
+  "name": "Albertus Magnus College",
+  "citystate": "New Haven, CT",
+  "website": "www.albertus.edu/",
+  "schoolType": "Private",
+  "coed": "Yes",
+  "population": "1,278",
+  "women": "835 (65.3%)",
+  "men": "443 (34.7%)",
+  "generalAdmissionsData": {
+    "difficulty": "Moderately difficult",
+    "acceptanceRate": "68% of    689 applicants were admitted",
+    "earlyAction": "No",
+    "earlyDecision": "No",
+    "regularDeadline": "August 30",
+    "SATMath": {
+      "average": "420",
+      "halfClassRange": "410-490"
+    },
+    "SATReading": {
+      "average": "432",
+      "halfClassRange": "400-480"
+    },
+    "SATWriting": {
+      "average": "432",
+      "halfClassRange": "400-420"
+    },
+    "ACTComposite": {
+      "average": "Not reported",
+      "halfClassRange": null
+    }
+  },
+  "tuition": {
+    "financialAid": {
+      "website": null,
+      "applicationDeadline": "Priority deadline February 28",
+      "awardDate": "On a rolling basis beginning March 1",
+      "FAFSACode": "",
+      "freshmen": {
+        "applicants": "502 (92.1%) of freshmen",
+        "foundToHaveNeed": "484 (96.4%) of applicants",
+        "receivedAid": "479 (99.0%) of applicants with financial need",
+        "needFullyMet": "",
+        "averagePercentOfNeedMet": "61%",
+        "averageAward": "$20,792"
+      },
+      "allUndergraduates": {
+        "applicants": "1,170 (86.3%) of undergraduates",
+        "foundToHaveNeed": "1,112 (82.0%) of applicants",
+        "receivedAid": "1,098 (98.7%) of applicants with financial need",
+        "needFullyMet": "",
+        "averagePercentOfNeedMet": "48%",
+        "averageAward": "$14,193",
+        "meritBasedGift": "8 (.6%) of undergraduates had no financial need and received merit aid, average amount $9,976"
+      },
+      "borrowing": {
+        "percentOfGraduatesWithLoans": "84%",
+        "averageIndebtednessOfGraduates": " $25,181"
+      }
+    }
+  },
+  "undergraduateMajors": [
+    "Accounting",
+    "Art History, Criticism and Conservation",
+    "Art Therapy/Therapist",
+    "Art/Art Studies, General",
+    "Biology/Biological Sciences, General",
+    "Business Administration and Management, General",
+    "Chemistry, General",
+    "Child Development",
+    "Criminal Justice/Law Enforcement Administration",
+    "Curriculum and Instruction",
+    "Drama and Dramatics/Theatre Arts, General",
+    "Education, General",
+    "English Language and Literature, General",
+    "Finance, General",
+    "Fine/Studio Arts, General",
+    "General Studies",
+    "Graphic Design",
+    "History, General",
+    "Human Resources Management and Services, Other",
+    "Human Services, General",
+    "Humanities/Humanistic Studies",
+    "Information Science/Studies",
+    "International Business/Trade/Commerce",
+    "International/Global Studies",
+    "Junior High/Intermediate/Middle School Education and Teaching",
+    "Marketing/Marketing Management, General",
+    "Mathematics, General",
+    "Philosophy",
+    "Photography",
+    "Political Science and Government, General",
+    "Pre-Dentistry Studies",
+    "Pre-Law Studies",
+    "Pre-Medicine/Pre-Medical Studies",
+    "Pre-Veterinary Studies",
+    "Psychology, General",
+    "Religion/Religious Studies",
+    "Secondary Education and Teaching",
+    "Social Sciences, General",
+    "Social Work",
+    "Sociology",
+    "Spanish Language and Literature",
+    "Speech Communication and Rhetoric",
+    "Sport and Fitness Administration/Management",
+    "Theatre Literature, History and Criticism",
+    "Urban Studies/Affairs",
+    "Art Therapy",
+    "Business Administration and Management--General",
+    "Education--General",
+    "Human Services",
+    "Liberal Studies",
+    "Organizational Management",
+    "Writing"
+  ],
+  "mostPopularMajors": [
+    "Business/marketing",
+    "Psychology",
+    "Social sciences"
+  ],
+  "studyAbroad": false,
+  "IBCreditsAccepted": "Not accepted",
+  "APCreditsAccepted": "Accepted for placement and credit",
+  "sophomoreStanding": "Not available",
+  "demographics": [
+    {
+      "race": "American Indian/Alaskan Native",
+      "percentage": 0.3
+    },
+    {
+      "race": "Asian",
+      "percentage": 1.1
+    },
+    {
+      "race": "Black/African-American",
+      "percentage": 26.8
+    },
+    {
+      "race": "Hispanic/Latino",
+      "percentage": 12
+    },
+    {
+      "race": "Multi-race (not Hispanic/Latino)",
+      "percentage": 1.2
+    },
+    {
+      "race": "Native Hawaiian/ Pacific Islander",
+      "percentage": 0
+    },
+    {
+      "race": "White",
+      "percentage": 45.4
+    },
+    {
+      "race": "Unknown",
+      "percentage": 13.1
+    }
+  ],
+  "percentInternationalStudents": "",
+  "averageStudentAge": "29",
+  "retention": {
+    "percentOfFirstYearStudentsReturning": "72.0%",
+    "percentOfGraduatesWithin4Years": "  42.5%",
+    "percentOfGraduatesWithin5Years": "57.5%",
+    "percentOfGraduatesWithin6Years": "  57.0%"
+  },
+  "specificAdmissionsData": {
+    "GPA": {
+      "average": "2.9",
+      "range1": {
+        "lowRange": 3.75,
+        "highRange": 4,
+        "percentageOfFreshmen": "4%"
+      },
+      "range2": {
+        "lowRange": 3.5,
+        "highRange": 3.74,
+        "percentageOfFreshmen": "6%"
+      },
+      "range3": {
+        "lowRange": 3.25,
+        "highRange": 3.49,
+        "percentageOfFreshmen": "9%"
+      },
+      "range4": {
+        "lowRange": 3,
+        "highRange": 3.24,
+        "percentageOfFreshmen": "17%"
+      },
+      "range5": {
+        "lowRange": 2.5,
+        "highRange": 2.99,
+        "percentageOfFreshmen": "37%"
+      },
+      "range6": {
+        "lowRange": 2,
+        "highRange": 2.49,
+        "percentageOfFreshmen": "25%"
+      }
+    },
+    "SATWriting": {
+      "range1": {
+        "lowRange": 700,
+        "highRange": 800,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range2": {
+        "lowRange": 600,
+        "highRange": 700,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range3": {
+        "lowRange": 500,
+        "highRange": 600,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range4": {
+        "lowRange": 400,
+        "highRange": 500,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range5": {
+        "lowRange": 300,
+        "highRange": 400,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range6": {
+        "lowRange": 200,
+        "highRange": 300,
+        "percentageOfFreshmen": "Not reported"
+      }
+    },
+    "SATReading": {
+      "range1": {
+        "lowRange": 700,
+        "highRange": 800,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range2": {
+        "lowRange": 600,
+        "highRange": 700,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range3": {
+        "lowRange": 500,
+        "highRange": 600,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range4": {
+        "lowRange": 400,
+        "highRange": 500,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range5": {
+        "lowRange": 300,
+        "highRange": 400,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range6": {
+        "lowRange": 200,
+        "highRange": 300,
+        "percentageOfFreshmen": "Not reported"
+      }
+    },
+    "SATMath": {
+      "range1": {
+        "lowRange": 700,
+        "highRange": 800,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range2": {
+        "lowRange": 600,
+        "highRange": 700,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range3": {
+        "lowRange": 500,
+        "highRange": 600,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range4": {
+        "lowRange": 400,
+        "highRange": 500,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range5": {
+        "lowRange": 300,
+        "highRange": 400,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range6": {
+        "lowRange": 200,
+        "highRange": 300,
+        "percentageOfFreshmen": "Not reported"
+      }
+    },
+    "ACTComposite": {
+      "range1": {
+        "lowRange": 30,
+        "highRange": 36,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range2": {
+        "lowRange": 24,
+        "highRange": 29,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range3": {
+        "lowRange": 18,
+        "highRange": 23,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range4": {
+        "lowRange": 12,
+        "highRange": 17,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range5": {
+        "lowRange": 6,
+        "highRange": 11,
+        "percentageOfFreshmen": "Not reported"
+      },
+      "range6": {
+        "lowRange": 1,
+        "highRange": 5,
+        "percentageOfFreshmen": "Not reported"
+      }
+    },
+    "courses": {
+      "english": {
+        "requiredUnits": "4",
+        "recommendedUnits": " "
+      },
+      "mathematics": {
+        "requiredUnits": "2",
+        "recommendedUnits": "3"
+      },
+      "science": {
+        "requiredUnits": "2",
+        "recommendedUnits": "3"
+      },
+      "foreignLanguage": {
+        "requiredUnits": " ",
+        "recommendedUnits": "3"
+      },
+      "socialStudies": {
+        "requiredUnits": "2",
+        "recommendedUnits": "3"
+      },
+      "history": {
+        "requiredUnits": " ",
+        "recommendedUnits": " "
+      },
+      "electives": {
+        "requiredUnits": " ",
+        "recommendedUnits": " "
+      }
+    },
+    "testing": {
+      "SATorACT": {
+        "required": true,
+        "scoresMustBeReceivedBy": "August  30"
+      }
+    },
+    "applying": {
+      "address": "700 Prospect Street New Haven, CT  06511-1189",
+      "phone": "(203) 773-8501",
+      "fax": "(203) 785-8652",
+      "email": "700 Prospect Street",
+      "applicationFee": "$35",
+      "feeWaiverAvailable": "Available",
+      "deferOption": "Student can defer admission",
+      "earlyDecision": {
+        "offered": "No",
+        "deadline": " ",
+        "notification": " "
+      },
+      "earlyAction": {
+        "offered": "No",
+        "deadline": " ",
+        "notification": " "
+      },
+      "commonApplication": {
+        "accepted": false,
+        "supplementRequired": false
+      },
+      "universalApp": false,
+      "requirements": {
+        "interview": "Not required",
+        "personalStatement": "Recommended for all freshmen",
+        "numberOfRecLettersRequired": 1,
+        "other": " ",
+        "financialNeed": "Financial need is not a consideration in the admissions process"
+      }
+    }
+  },
+  "campusSetting": {
+    "localPopulation": "130,660",
+    "environment": "Small city",
+    "nearestMetropolitanArea": " ",
+    "averageLowTempJanuary": 15,
+    "averageHighTempSeptember": 80,
+    "rainyDaysPerYear": 128,
+    "linkToCampusMap": null,
+    "nearestAirport": "48 mile(s) from campus in Windsor Locks",
+    "nearestBusStation": "3 mile(s) from campus in New Haven",
+    "nearestTrainStation": "3 mile(s) from campus in New Haven",
+    "housing": {
+      "types": [
+        "Coed dorms",
+        " women's dorms"
+      ],
+      "freshmenGuarantee": "Freshmen are given priority consideration for housing",
+      "studentsInCollegeHousing": "38% of freshmen, 45% of all students",
+      "percentOfStudentsCommuting": "55%",
+      "requirements": " "
+    },
+    "sports": {
+      "athleticConferences": "NCAA Division III",
+      "mascot": "Falcons",
+      "varsitySportsOffered": {
+        "mens": [
+          "Baseball",
+          "Basketball",
+          "Cross-Country Running",
+          "Lacrosse",
+          "Soccer",
+          "Tennis",
+          "Volleyball"
+        ],
+        "womens": [
+          "Basketball",
+          "Cross-Country Running",
+          "Lacrosse",
+          "Soccer",
+          "Softball",
+          "Tennis",
+          "Volleyball"
+        ]
+      },
+      "sportsScholarshipsGiven": {
+        "mens": [],
+        "womens": []
+      }
+    },
+    "popularActivitiesAndOrganizations": [
+      "choral groups",
+      " dance",
+      " drama theatre",
+      " literary magazine",
+      " music theatre",
+      " student government",
+      " yearbook"
+    ],
+    "greekLife": {
+      "percentofWomenInSororities": null,
+      "percentOfMenInFraternities": null
+    },
+    "ROTC": " "
+  }
+}

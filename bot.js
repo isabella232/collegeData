@@ -20,7 +20,7 @@ function generateUrls(start, end) {
 };
 
 // start = 6 ; end = 3341 for the full collection of college data
-Pages = generateUrls(6, 1000);
+Pages = generateUrls(6, 9);
 
 function wizard() {
   // if the Pages array is empty, we are Done!!
@@ -64,8 +64,6 @@ function wizard() {
 
 var numberOfParallelRequests = 1;
 
-setTimeout(function(){  
-  for (var i = 0; i < numberOfParallelRequests; i++) {
-    wizard();
-  }
-}, 5000)
+for (var i = 0; i < numberOfParallelRequests; i++) {
+  wizard();
+}

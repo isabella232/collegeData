@@ -1,0 +1,407 @@
+{
+  "idNumber": "6",
+  "name": "Bryn Athyn College",
+  "citystate": "Bryn Athyn, PA",
+  "website": "www.brynathyn.edu/",
+  "schoolType": "Private",
+  "coed": "Yes",
+  "population": "268",
+  "women": "140 (52.2%)",
+  "men": "128 (47.8%)",
+  "generalAdmissionsData": {
+    "difficulty": "Minimally difficult",
+    "acceptanceRate": "52% of    396 applicants were admitted",
+    "earlyAction": "No",
+    "earlyDecision": "No",
+    "regularDeadline": " ",
+    "SATMath": {
+      "average": "505",
+      "halfClassRange": "460-55"
+    },
+    "SATReading": {
+      "average": "520",
+      "halfClassRange": "460-580"
+    },
+    "SATWriting": {
+      "average": "47",
+      "halfClassRange": "420-530"
+    },
+    "ACTComposite": {
+      "average": "25",
+      "halfClassRange": "20-25"
+    }
+  },
+  "tuition": {
+    "financialAid": {
+      "website": null,
+      "applicationDeadline": "Priority deadline February 15",
+      "awardDate": "On a rolling basis beginning March 1",
+      "FAFSACode": "",
+      "freshmen": {
+        "applicants": "28 (65.1%) of freshmen",
+        "foundToHaveNeed": "20 (71.4%) of applicants",
+        "receivedAid": "20 (100.0%) of applicants with financial need",
+        "needFullyMet": "",
+        "averagePercentOfNeedMet": "93%",
+        "averageAward": "$11,104"
+      },
+      "allUndergraduates": {
+        "applicants": "92 (67.6%) of undergraduates",
+        "foundToHaveNeed": "66 (48.5%) of applicants",
+        "receivedAid": "66 (100.0%) of applicants with financial need",
+        "needFullyMet": "",
+        "averagePercentOfNeedMet": "95%",
+        "averageAward": "$9,987",
+        "meritBasedGift": "22 (16.2%) of undergraduates had no financial need and received merit aid, average amount $2,232"
+      },
+      "borrowing": {
+        "percentOfGraduatesWithLoans": "36%",
+        "averageIndebtednessOfGraduates": "  $8,299"
+      }
+    }
+  },
+  "campusSetting": {
+    "localPopulation": "1,396",
+    "environment": "Small town",
+    "nearestMetropolitanArea": "Philadelphia",
+    "averageLowTempJanuary": 22,
+    "averageHighTempSeptember": 81,
+    "rainyDaysPerYear": 117,
+    "nearestAirport": "15 mile(s) from campus in Philadelphia",
+    "nearestBusStation": "4 mile(s) from campus in Willow Grove",
+    "nearestTrainStation": "1 mile(s) from campus in Huntingdon Valley",
+    "housing": {
+      "types": [
+        "Women's dorms",
+        " men's dorms"
+      ],
+      "freshmenGuarantee": "Freshmen are guaranteed housing",
+      "studentsInCollegeHousing": "29% of freshmen, 68% of all students",
+      "percentOfStudentsCommuting": "27%",
+      "requirements": " "
+    },
+    "sports": {
+      "athleticConferences": " ",
+      "mascot": " ",
+      "varsitySportsOffered": {
+        "mens": [
+          "Baseball"
+        ],
+        "womens": [
+          "Baseball"
+        ]
+      },
+      "sportsScholarshipsGiven": {
+        "mens": [],
+        "womens": []
+      }
+    },
+    "popularActivitiesAndOrganizations": [
+      "choral groups",
+      " dance",
+      " drama theatre",
+      " music ensembles",
+      " music theatre",
+      " student government",
+      " student newspaper"
+    ],
+    "greekLife": {
+      "percentofWomenInSororities": null,
+      "percentOfMenInFraternities": null
+    },
+    "ROTC": "Army ROTC is offered off campus, Air Force ROTC offered off campus"
+  },
+  "demographics": [
+    {
+      "race": "American Indian/Alaskan Native",
+      "percentage": 0
+    },
+    {
+      "race": "Asian",
+      "percentage": 3.3
+    },
+    {
+      "race": "Black/African-American",
+      "percentage": 15.5
+    },
+    {
+      "race": "Hispanic/Latino",
+      "percentage": 6.7
+    },
+    {
+      "race": "Multi-race (not Hispanic/Latino)",
+      "percentage": 0
+    },
+    {
+      "race": "Native Hawaiian/ Pacific Islander",
+      "percentage": 0.8
+    },
+    {
+      "race": "White",
+      "percentage": 73.6
+    },
+    {
+      "race": "Unknown",
+      "percentage": 0
+    }
+  ],
+  "percentInternationalStudents": "",
+  "averageStudentAge": "22",
+  "retention": {
+    "percentOfFirstYearStudentsReturning": "74.0%",
+    "percentOfGraduatesWithin4Years": "  34.3%",
+    "percentOfGraduatesWithin5Years": "45.7%",
+    "percentOfGraduatesWithin6Years": "  49.0%"
+  },
+  "specificAdmissionsData": {
+    "GPA": {
+      "average": "3.15",
+      "range1": {
+        "lowRange": 3.75,
+        "highRange": 4,
+        "percentageOfFreshmen": "19%"
+      },
+      "range2": {
+        "lowRange": 3.5,
+        "highRange": 3.74,
+        "percentageOfFreshmen": "17%"
+      },
+      "range3": {
+        "lowRange": 3.25,
+        "highRange": 3.49,
+        "percentageOfFreshmen": "13%"
+      },
+      "range4": {
+        "lowRange": 3,
+        "highRange": 3.24,
+        "percentageOfFreshmen": "20%"
+      },
+      "range5": {
+        "lowRange": 2.5,
+        "highRange": 2.99,
+        "percentageOfFreshmen": "27%"
+      },
+      "range6": {
+        "lowRange": 2,
+        "highRange": 2.49,
+        "percentageOfFreshmen": "4%"
+      }
+    },
+    "SATWriting": {
+      "range1": {
+        "lowRange": 700,
+        "highRange": 800,
+        "percentageOfFreshmen": "6%"
+      },
+      "range2": {
+        "lowRange": 600,
+        "highRange": 700,
+        "percentageOfFreshmen": "12%"
+      },
+      "range3": {
+        "lowRange": 500,
+        "highRange": 600,
+        "percentageOfFreshmen": "26%"
+      },
+      "range4": {
+        "lowRange": 400,
+        "highRange": 500,
+        "percentageOfFreshmen": "35%"
+      },
+      "range5": {
+        "lowRange": 300,
+        "highRange": 400,
+        "percentageOfFreshmen": "21%"
+      },
+      "range6": {
+        "lowRange": 200,
+        "highRange": 300,
+        "percentageOfFreshmen": "0%"
+      }
+    },
+    "SATReading": {
+      "range1": {
+        "lowRange": 700,
+        "highRange": 800,
+        "percentageOfFreshmen": "4%"
+      },
+      "range2": {
+        "lowRange": 600,
+        "highRange": 700,
+        "percentageOfFreshmen": "25%"
+      },
+      "range3": {
+        "lowRange": 500,
+        "highRange": 600,
+        "percentageOfFreshmen": "27%"
+      },
+      "range4": {
+        "lowRange": 400,
+        "highRange": 500,
+        "percentageOfFreshmen": "35%"
+      },
+      "range5": {
+        "lowRange": 300,
+        "highRange": 400,
+        "percentageOfFreshmen": "8%"
+      },
+      "range6": {
+        "lowRange": 200,
+        "highRange": 300,
+        "percentageOfFreshmen": "1%"
+      }
+    },
+    "SATMath": {
+      "range1": {
+        "lowRange": 700,
+        "highRange": 800,
+        "percentageOfFreshmen": "3%"
+      },
+      "range2": {
+        "lowRange": 600,
+        "highRange": 700,
+        "percentageOfFreshmen": "18%"
+      },
+      "range3": {
+        "lowRange": 500,
+        "highRange": 600,
+        "percentageOfFreshmen": "35%"
+      },
+      "range4": {
+        "lowRange": 400,
+        "highRange": 500,
+        "percentageOfFreshmen": "34%"
+      },
+      "range5": {
+        "lowRange": 300,
+        "highRange": 400,
+        "percentageOfFreshmen": "10%"
+      },
+      "range6": {
+        "lowRange": 200,
+        "highRange": 300,
+        "percentageOfFreshmen": "0%"
+      }
+    },
+    "ACTComposite": {
+      "range1": {
+        "lowRange": 30,
+        "highRange": 36,
+        "percentageOfFreshmen": "22%"
+      },
+      "range2": {
+        "lowRange": 24,
+        "highRange": 29,
+        "percentageOfFreshmen": "11%"
+      },
+      "range3": {
+        "lowRange": 18,
+        "highRange": 23,
+        "percentageOfFreshmen": "56%"
+      },
+      "range4": {
+        "lowRange": 12,
+        "highRange": 17,
+        "percentageOfFreshmen": "11%"
+      },
+      "range5": {
+        "lowRange": 6,
+        "highRange": 11,
+        "percentageOfFreshmen": "0%"
+      },
+      "range6": {
+        "lowRange": 1,
+        "highRange": 5,
+        "percentageOfFreshmen": "0%"
+      }
+    },
+    "courses": {
+      "english": {
+        "requiredUnits": "4",
+        "recommendedUnits": " "
+      },
+      "mathematics": {
+        "requiredUnits": "3",
+        "recommendedUnits": " "
+      },
+      "science": {
+        "requiredUnits": "3",
+        "recommendedUnits": " "
+      },
+      "foreignLanguage": {
+        "requiredUnits": "2",
+        "recommendedUnits": " "
+      },
+      "socialStudies": {
+        "requiredUnits": "3",
+        "recommendedUnits": " "
+      },
+      "history": {
+        "requiredUnits": "3",
+        "recommendedUnits": " "
+      },
+      "electives": {
+        "requiredUnits": " ",
+        "recommendedUnits": " "
+      }
+    },
+    "testing": {
+      "SATorACT": {
+        "required": true,
+        "scoresMustBeReceivedBy": "Not reported"
+      }
+    },
+    "applying": {
+      "address": "2965 College DrivePO Box 717 Bryn Athyn, PA  19009-0717",
+      "phone": "(267) 502-2511",
+      "fax": "(267) 502-2658",
+      "email": "2965 College DrivePO Box 717",
+      "applicationFee": "No fee required",
+      "feeWaiverAvailable": "Not reported",
+      "deferOption": "Student can defer admission",
+      "earlyDecision": {
+        "offered": "No",
+        "deadline": " ",
+        "notification": " "
+      },
+      "earlyAction": {
+        "offered": "No",
+        "deadline": " ",
+        "notification": " "
+      },
+      "commonApplication": {
+        "accepted": false,
+        "supplementRequired": false
+      },
+      "universalApp": false,
+      "requirements": {
+        "interview": "Not required",
+        "personalStatement": "Required for all freshmen",
+        "numberOfRecLettersRequired": 1,
+        "other": "Interest in the writings of Emanuel Swedenborg required for freshmen",
+        "financialNeed": "Financial need is not a consideration in the admissions process"
+      }
+    }
+  },
+  "undergraduateMajors": [
+    "Biology/Biological Sciences, General",
+    "Elementary Education and Teaching",
+    "English Language and Literature, General",
+    "History, General",
+    "Multi-/Interdisciplinary Studies, General",
+    "Multi-/Interdisciplinary Studies, Other",
+    "Psychology, General",
+    "Religion/Religious Studies, Other",
+    "Religion",
+    "Theology"
+  ],
+  "mostPopularMajors": [
+    "Interdisciplinary studies",
+    "Education",
+    "Philosophy and religious studies"
+  ],
+  "studyAbroad": true,
+  "IBCreditsAccepted": "Not accepted",
+  "APCreditsAccepted": "Accepted for placement and credit",
+  "sophomoreStanding": "Not available"
+}
