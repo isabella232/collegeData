@@ -62,27 +62,7 @@ var parsePage = function (html, index, schoolId) {
       }
     };
 
-    var tuitionArray = $('.onecolumntable').eq(-4).find('td').eq(-5).html().split("<br>");
-
-    if (tuitionArray.length > 1) {
-      schoolData.tuition.tuitionAndFees = {
-          inState: tuitionArray[0].split(':')[1].trim(),
-          outOfState: tuitionArray[1].split(':')[1].trim(),
-          roomAndBoard: $('.onecolumntable').eq(-4).find('td').eq(-4).text(),
-          averageGraduateDebt: $('.onecolumntable').eq(-4).find('td').eq(-1).text().trim()
-      }
-    }
-
-    if (tuitionArray.length === 1) {
-      schoolData.tuition.tuitionAndFees = {
-        tuition: tuitionArray[0],
-        roomAndBoard: $('.onecolumntable').eq(-4).find('td').eq(-4).text().trim(),
-        averageGraduateDebt: $('.onecolumntable').eq(-4).find('td').eq(-1).text().trim()
-      }
-
-    }
-
-  } else if ( index === 1 && _.indexOf(schoolData.pages, index) === -1 ) {
+  } else if ( index === 1 ) {
 
     // Admissions Details Page
     schoolData.specificAdmissionsData = {};
@@ -299,7 +279,7 @@ var parsePage = function (html, index, schoolId) {
       address: $('.onecolumntable').eq(-10).find('td').eq(-5).text() + " " + $('.onecolumntable').eq(-10).find('td').eq(-4).text(),
       phone: $('.onecolumntable').eq(-10).find('td').eq(-3).text(),
       fax: $('.onecolumntable').eq(-10).find('td').eq(-2).text(),
-      email: $('.onecolumntable').eq(-10).find('td').eq(-5).text(), 
+      email: $('#section6').find('table').first().find('td').last().text(), 
       applicationFee: $('.onecolumntable').eq(-9).find('td').eq(-7).text(),
       feeWaiverAvailable: $('.onecolumntable').eq(-9).find('td').eq(-6).text(),
       deferOption: $('.onecolumntable').eq(-9).find('td').eq(-2).text(),
@@ -327,64 +307,90 @@ var parsePage = function (html, index, schoolId) {
       }
     }
 
-  } else if ( index === 2 && _.indexOf(schoolData.pages, index) === -1 ) {
+  } else if ( index === 2 ) {
 
     console.log('page 3');
-
-    var len = $('.onecolumntable').eq(-9).find('td').find('a').length;
-
-    if (!schoolData.tuition) {
-      schoolData.tuition = {};
-    };
 
     schoolData.pages.push(index);
 
     schoolData.idNumber = schoolId;
-    schoolData.tuition.financialAid = {
-      website: len > 2 ? $('.onecolumntable').eq(-9).find('td').find('a')[len - 2].href : null,
-      netPriceCalculator: len > 1 ? $('.onecolumntable').eq(-9).find('td').find('a')[len - 1].href : null,
-      applicationDeadline: $('.onecolumntable').eq(-8).find('td').eq(-3).text(),
-      awardDate: $('.onecolumntable').eq(-8).find('td').eq(-2).text(),
-      FAFSACode: $('.laligntable').find('th').eq(-2).text().slice(14,20),
-      freshmen: {
-        applicants: $('.onecolumntable').eq(-7).find('td').eq(-10).text(),
-        foundToHaveNeed: $('.onecolumntable').eq(-7).find('td').eq(-9).text(),
-        receivedAid: $('.onecolumntable').eq(-7).find('td').eq(-8).text(),
-        needFullyMet: $('onecolumntable').eq(-7).find('td').eq(-7).text(),
-        averagePercentOfNeedMet: $('.onecolumntable').eq(-7).find('td').eq(-6).text(),
-        averageAward: $('.onecolumntable').eq(-7).find('td').eq(-5).text(),
-        meritBasedGift: $('.onecolumntable').eq(-7).find('td').eq(-1).text
-      },
-      allUndergraduates: {
-        applicants: $('.onecolumntable').eq(-6).find('td').eq(-10).text(),
-        foundToHaveNeed: $('.onecolumntable').eq(-6).find('td').eq(-9).text(),
-        receivedAid: $('.onecolumntable').eq(-6).find('td').eq(-8).text(),
-        needFullyMet: $('onecolumntable').eq(-6).find('td').eq(-7).text(),
-        averagePercentOfNeedMet: $('.onecolumntable').eq(-6).find('td').eq(-6).text(),
-        averageAward: $('.onecolumntable').eq(-6).find('td').eq(-5).text(),
-        meritBasedGift: $('.onecolumntable').eq(-6).find('td').eq(-1).text()
-      },
-      borrowing: {
-        percentOfGraduatesWithLoans: $('.onecolumntable').eq(-5).find('td').eq(-5).text(),
-        averageIndebtednessOfGraduates: $('.onecolumntable').eq(-5).find('td').eq(-4).text()
+
+    var totalCostArray = $('.onecolumntable').eq(-10).find('td').eq(-6).html().split("<br>");
+
+    if (totalCostArray.length > 1) {
+      schoolData.tuition.costOfAttendance = {
+          totalCost: {
+            inStateTotal: totalCostArray[0].split(':')[1].trim(),
+            outOfStateTotal: totalCostArray[1].split(':')[1].trim()
+          },
+          inStateTuition: $('.onecolumntable').eq(-10).find('td').eq(-5).html().split("<br>")[0].split(':')[1].trim(),
+          outOfStateTuition: $('.onecolumntable').eq(-10).find('td').eq(-5).html().split("<br>")[1].split(':')[1].trim(),
+          roomAndBoard: $('.onecolumntable').eq(-10).find('td').eq(-4).html(),
+          booksAndSupplies: $('.onecolumntable').eq(-10).find('td').eq(-3).html(),
+          otherExpenses: $('.onecolumntable').eq(-10).find('td').eq(-2).html(),
+          averageGraduateDebt: $('.onecolumntable').eq(-5).find('td').eq(-4).html().trim()
       }
     }
 
-  } else if ( index === 3 && _.indexOf(schoolData.pages, index) === -1 ) {
+    if (totalCostArray.length === 1) {
+      schoolData.tuition.tuitionAndFees = {
+        totalCost: totalCostArray[0],
+        tuition: $('.onecolumntable').eq(-10).find('td').eq(-5).html(),
+        roomAndBoard: $('.onecolumntable').eq(-10).find('td').eq(-4).html(),
+        booksAndSupplies: $('.onecolumntable').eq(-10).find('td').eq(-3).html(),
+        averageGraduateDebt: $('.onecolumntable').eq(-5).find('td').eq(-4).html().trim()
+      }
+
+    }
+
+    schoolData.tuition = {
+      financialAid: {
+        emailContact: $('#section10').find('table').eq(-3).find('td').eq(-3).text().trim(),
+        website: $('#section10').find('table').eq(-3).find('a')[1].attribs.href,
+        netPriceCalculator: $('#section10').find('table').eq(-3).find('a')[2].attribs.href,
+        applicationDeadline: $('.onecolumntable').eq(-8).find('td').eq(-3).text(),
+        awardDate: $('.onecolumntable').eq(-8).find('td').eq(-2).text(),
+        FAFSACode: $('#section10').find('table').eq(-1).find('tr').last().html().trim().split(' ').pop().slice(0,6),
+        freshmen: {
+          applicants: $('.onecolumntable').eq(-7).find('td').eq(-10).text(),
+          foundToHaveNeed: $('.onecolumntable').eq(-7).find('td').eq(-9).text(),
+          receivedAid: $('.onecolumntable').eq(-7).find('td').eq(-8).text(),
+          needFullyMet: $('onecolumntable').eq(-7).find('td').eq(-7).text(),
+          averagePercentOfNeedMet: $('.onecolumntable').eq(-7).find('td').eq(-6).text(),
+          averageAward: $('.onecolumntable').eq(-7).find('td').eq(-5).text(),
+          meritBasedGift: $('.onecolumntable').eq(-7).find('td').eq(-1).text
+        },
+        allUndergraduates: {
+          applicants: $('.onecolumntable').eq(-6).find('td').eq(-10).text(),
+          foundToHaveNeed: $('.onecolumntable').eq(-6).find('td').eq(-9).text(),
+          receivedAid: $('.onecolumntable').eq(-6).find('td').eq(-8).text(),
+          needFullyMet: $('onecolumntable').eq(-6).find('td').eq(-7).text(),
+          averagePercentOfNeedMet: $('.onecolumntable').eq(-6).find('td').eq(-6).text(),
+          averageAward: $('.onecolumntable').eq(-6).find('td').eq(-5).text(),
+          meritBasedGift: $('.onecolumntable').eq(-6).find('td').eq(-1).text()
+        },
+        borrowing: {
+          percentOfGraduatesWithLoans: $('.onecolumntable').eq(-5).find('td').eq(-5).text(),
+          averageIndebtednessOfGraduates: $('.onecolumntable').eq(-5).find('td').eq(-4).text()
+        }
+      }
+    }
+
+  } else if ( index === 3 ) {
 
     console.log('page 4');
 
     schoolData.pages.push(index);
     
     schoolData.idNumber = schoolId;
-    schoolData.undergraduateMajors = $('.collist').find('li').map(function(i, el) { return $(this).text().trim() }).get();
+    schoolData.undergraduateMajors = _,uniq($('.collist').find('li').map(function(i, el) { return $(this).text().trim() }).get());
     schoolData.mostPopularMajors = $('.onecolumntable').eq(-11).find('td').eq(-5).text().split(',').map(function(el, i) { return el.trim() });
     schoolData.studyAbroad = $('.onecolumntable').eq(-11).find('td').eq(-2).text().indexOf('Offered') > -1 ? true : false;
     schoolData.IBCreditsAccepted = $('.onecolumntable').eq(-8).find('td').eq(-3).text();
     schoolData.APCreditsAccepted = $('.onecolumntable').eq(-8).find('td').eq(-2).text();
     schoolData.sophomoreStanding = $('.onecolumntable').eq(-8).find('td').eq(-1).text();
 
-  } else if ( index === 4 && _.indexOf(schoolData.pages, index) === -1 ) {
+  } else if ( index === 4 ) {
 
     console.log('page 5');
 
@@ -429,7 +435,7 @@ var parsePage = function (html, index, schoolId) {
       ROTC: $('.onecolumntable').eq(-1).find('td').eq(-1).text()
     }
 
-  } else if ( index === 5 && _.indexOf(schoolData.pages, index) === -1 ) {
+  } else if ( index === 5 ) {
 
     console.log('page 6 - id # ', schoolId);
 
@@ -441,9 +447,9 @@ var parsePage = function (html, index, schoolId) {
     schoolData.averageStudentAge = $('.onecolumntable').eq(-3).find('td').eq(-2).text();
     schoolData.retention = {
       percentOfFirstYearStudentsReturning: $('.onecolumntable').eq(-2).find('td').eq(-4).text(),
-      percentOfGraduatesWithin4Years: $('.onecolumntable').eq(-2).find('td').eq(-3).text(),
-      percentOfGraduatesWithin5Years: $('.onecolumntable').eq(-2).find('td').eq(-2).text(),
-      percentOfGraduatesWithin6Years: $('.onecolumntable').eq(-2).find('td').eq(-1).text()
+      percentOfGraduatesWithin4Years: $('.onecolumntable').eq(-2).find('td').eq(-3).text().trim(),
+      percentOfGraduatesWithin5Years: $('.onecolumntable').eq(-2).find('td').eq(-2).text().trim(),
+      percentOfGraduatesWithin6Years: $('.onecolumntable').eq(-2).find('td').eq(-1).text().trim()
     }
 
   } else {
@@ -475,7 +481,7 @@ var walk = function(dir, done) {
         if (stat && stat.isFile()) {
           pageData = fs.readFileSync(file);
           schoolID = file.split('-').pop().split('.').shift();
-          pageID = parseInt(file[63]) - 1;
+          pageID = parseInt(file[65]) - 1;
           console.log(file);
           console.log('parsing school ID: ', schoolID, " and page ID: ", pageID);
           parsePage(pageData, pageID, schoolID);
