@@ -26,3 +26,8 @@ node_modules
 
 # Users Environment Variables
 .lock-wscript
+
+# Python scrapy stuff
+*.pyc
+fetcher/venv
+raw_html/*
