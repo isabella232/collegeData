@@ -4,6 +4,9 @@ from scrapy import Spider
 
 OUTPUT = os.path.join(os.path.dirname(__file__), "..", "raw_html")
 
+if not os.path.exists(OUTPUT):
+    os.makedirs(OUTPUT)
+
 def slugify_url(url):
     return re.sub("[^-a-zA-Z0-9_\.]", "-", url)
 

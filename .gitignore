@@ -31,4 +31,3 @@ node_modules
 *.pyc
 fetcher/venv
 raw_html/*
-^raw_html/.gitkeep
