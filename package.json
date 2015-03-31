@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "bluebird": "^2.9.21",
     "cheerio": "^0.17.0",
     "events": "^1.0.2",
     "http": "0.0.0",
