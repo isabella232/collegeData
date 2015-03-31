@@ -431,8 +431,6 @@ var rawHtmlFilename = function(idNumber, page) {
 
 
 var parseAll = function(dir, concurrency, done) {
-  
-
   var idRange = _.range(COLLEGE_ID_RANGE[0], COLLEGE_ID_RANGE[1] + 1);
   var pageRange = [1,2,3,4,5,6];
   var pageParsers = {
@@ -452,6 +450,7 @@ var parseAll = function(dir, concurrency, done) {
             } else {
               var err = new Error(idNumber + " is missing page " + page);
               err.ok = true;
+              err.log = true;
               reject(err);
             }
           });
@@ -467,6 +466,7 @@ var parseAll = function(dir, concurrency, done) {
             if (html.indexOf("You requested a College Profile page that does not exist") != -1) {
               var err = new Error("College " + idNumber + " has no data.");
               err.ok = true;
+              err.log = true;
               reject(err);
             }
             if (err) { reject(err); }
@@ -479,10 +479,14 @@ var parseAll = function(dir, concurrency, done) {
           });
         });
       }).then(function() {
+        // All parsers have now run on the schoolData.
         return schoolData;
       }).catch(function(err) {
+        // an "ok" error is one that we don't need to stop the parser for (e.g.
+        // the college profile doesn't exist or we don't have all the pages
+        // yet).
         if (err.ok) {
-         console.log(err.message);
+         err.log && console.log(err.message);
         } else {
           throw err;
         }
@@ -499,7 +503,7 @@ var parseAll = function(dir, concurrency, done) {
       });
     }).catch(function(err) {
       if (err.ok) {
-        console.log(err.message);
+        err.log && console.log(err.message);
       } else {
         console.log("school idNumber: ", idNumber);
         throw err;
