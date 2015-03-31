@@ -1,0 +1,3 @@
+# Python requirements.  Install with virtualenv.
+scrapy
+service_identity
