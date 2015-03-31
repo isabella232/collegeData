@@ -2,8 +2,7 @@ var _ = require('underscore');
 var Scraper = require('./scraper');
 var fs = require('fs');
 var jsop = require('jsop');
-// TODO: insert actual path to subdirectory with html page files
-var walkPath = './hopper';
+var walkPath = './raw_html';
 var cheerio = require('cheerio');
 
 var pageData, schoolID, pageID;
