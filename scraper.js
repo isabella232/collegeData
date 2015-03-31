@@ -30,17 +30,36 @@ util.inherits(Scraper, EventEmitter);
 Scraper.prototype.init = function () {
     var model;
     var self = this;
+    if ( fs.existsSync("data/" + self.schoolId + '.json') ) {  
+      var schoolData = jsop("data/" + self.schoolId + '.json');
+    } else {
+      self.loadWebPage(true)
+    }
 
     self.on('loaded', function (html) {
         model = self.parsePage(html, self.index, self.schoolId);
         self.emit('complete', model);
     });
 
-    self.loadWebPage();
+    if ( schoolData && _.indexOf(schoolData.pages, self.index) === -1  ) {
+      console.log('loading schoolId ' + self.schoolId + ', index ', self.index);
+      self.loadWebPage();
+    } else {
+      console.log('schoolId: ' + self.schoolId + ' and index: ' + self.index + ' already done.');
+      self.loadWebPage(true);
+    }
 };
 
-Scraper.prototype.loadWebPage = function () {
+Scraper.prototype.loadWebPage = function (skipBoolean) {
   var self = this;
+
+  console.log(skipBoolean);
+
+  if (skipBoolean) {
+    console.log('about to call complete');
+    self.emit('complete');
+  }
+
   http.get(self.url, function (res) {
     var body = '';
 
@@ -71,16 +90,18 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
     var schoolData = jsop("data/" + schoolId + '.json');
   }
 
+  if (!schoolData) console.log('missing data for this id: ', schoolId);
 
-  if ($('#getSavedSearch').text().trim().indexOf('Get') != -1 || $('#college411').length > 0) {
-    console.log('this is the file path ', fs.existsSync("data/" + schoolId + '.json'));
+  if ($('#getSavedSearch').text().trim().indexOf('Get') != -1 || $('#college411').length > 0 || $('.unavailable_content').length > 0 ) {
     fs.existsSync("data/" + schoolId + '.json') ? fs.unlinkSync('data/' + schoolId + '.json') : console.log('already deleted ', "data/" + schoolId + '.json');
     return
   }
 
-  if ( index === 0 ) {
+  if ( index === 0 && _.indexOf(schoolData.pages, index) === -1 ) {
 
     console.log('main page - id # ', schoolId);
+
+    schoolData.pages.push(index);
 
     schoolData.idNumber = schoolId;
     schoolData.name = $('.cp_left').find('h1').text();
@@ -138,11 +159,13 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
 
     }
 
-  } else if (index === 1 ) {
+  } else if ( index === 1 && _.indexOf(schoolData.pages, index) === -1 ) {
 
     // Admissions Details Page
     schoolData.specificAdmissionsData = {};
     console.log('page 2')
+
+    schoolData.pages.push(index);
 
     schoolData.idNumber = schoolId;
     schoolData.specificAdmissionsData.GPA = {
@@ -381,12 +404,15 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
       }
     }
 
-  } else if (index === 2 ) {
+  } else if ( index === 2 && _.indexOf(schoolData.pages, index) === -1 ) {
 
     console.log('page 3');
 
     var len = $('.onecolumntable').eq(-9).find('td').find('a').length;
     schoolData.tuition = {};
+
+    schoolData.pages.push(index);
+
 
     schoolData.idNumber = schoolId;
     schoolData.tuition.financialAid = {
@@ -419,9 +445,11 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
       }
     }
 
-  } else if (index === 3 ) {
+  } else if ( index === 3 && _.indexOf(schoolData.pages, index) === -1 ) {
 
     console.log('page 4');
+
+    schoolData.pages.push(index);
     
     schoolData.idNumber = schoolId;
     schoolData.undergraduateMajors = $('.collist').find('li').map(function(i, el) { return $(this).text().trim() }).get();
@@ -431,9 +459,11 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
     schoolData.APCreditsAccepted = $('.onecolumntable').eq(-8).find('td').eq(-2).text();
     schoolData.sophomoreStanding = $('.onecolumntable').eq(-8).find('td').eq(-1).text();
 
-  } else if (index === 4 ) {
+  } else if ( index === 4 && _.indexOf(schoolData.pages, index) === -1 ) {
 
     console.log('page 5');
+
+    schoolData.pages.push(index);
 
     schoolData.idNumber = schoolId;
     schoolData.campusSetting = {
@@ -474,9 +504,11 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
       ROTC: $('.onecolumntable').eq(-1).find('td').eq(-1).text()
     }
 
-  } else if ( index === 5 ) {
+  } else if ( index === 5 && _.indexOf(schoolData.pages, index) === -1 ) {
 
     console.log('page 6 - id # ', schoolId);
+
+    schoolData.pages.push(index);
         
     schoolData.idNumber = schoolId;
     schoolData.demographics = $('.onecolumntable').eq(-3).find('td').eq(-4).html().indexOf('Not reported') === -1 ? $('.onecolumntable').eq(-3).find('td').eq(-4).html().split('<br>').map(function(el, i) { return { race : el.split('%')[1].trim(), percentage: parseFloat(el) }}) : null;
@@ -490,7 +522,7 @@ Scraper.prototype.parsePage = function (html, index, schoolId) {
     }
 
   } else {
-    console.log('wtf');
+    console.log('school all done: ', schoolId);
   }
 
   return schoolData;

@@ -13,16 +13,21 @@ function generateUrls(start, end) {
     for (var j = 1; j < 7; j++) {
       schoolSubPages.push("http://www.collegedata.com/cs/data/college/college_pg0" + j + "_tmpl.jhtml?schoolId=");
     }
-    allPages.push(_.map(_.uniq(schoolSubPages), function(link){ return link + i; }));
+    if ( fs.existsSync("data/" + i + '.json') && jsop('data/' + i + '.json').pages.length < 6 ) {
+      allPages.push(_.map(_.uniq(schoolSubPages), function(link){ return link + i; }));
+    }
   }
+
+  console.log(allPages);
 
   return allPages;
 };
 
 // start = 6 ; end = 3341 for the full collection of college data
-Pages = generateUrls(6, 9);
+Pages = generateUrls(6, 3341);
 
 function wizard() {
+  console.log('wizard');
   // if the Pages array is empty, we are Done!!
   if (!Pages.length) {
     return console.log('Done!!!!');
@@ -30,34 +35,30 @@ function wizard() {
 
   var urlArray = Pages.pop();
 
-  setTimeout(function(){
-
-  })
   _.each(urlArray, function(element, index, list) {
     var schoolId = element.split('=').pop();
-    if ( !fs.existsSync("data/" + schoolId + '.json') ) {  
-      fs.writeFile('data/' + schoolId + '.json', JSON.stringify({idNumber: schoolId}));
+    if ( !fs.existsSync("data/" + schoolId + '.json') ) {
+      var data = JSON.stringify({idNumber: schoolId, pages: []});
+      fs.writeFileSync('data/' + schoolId + '.json', data);
+      // console.log('this school does not exist - ', schoolId);
+      // wizard()
     }
+
     var scraper = new Scraper(element, index, schoolId);  
     console.log('Colleges Left - ' + Pages.length);
 
     // if the error occurs we still want to create our
     // next request
     scraper.on('error', function (error) {
-      console.log(error);
+      console.log("school: ", schoolId, " index - ", index, ' - ', error);
       wizard();
     });
 
     // if the request completed successfully
-    // we want to store the results
+    // we go again
     scraper.on('complete', function (listing) {
-
-      // use fs.writefilesync here to generate a file or write directly to our mongoDB
-      if (listing) {
-        console.log('writing this listing: ', listing);
-      }
-      
-      wizard();
+      console.log('complete fired');
+      setTimeout(function() { wizard(); }, 3000);
     });
   })
 };
