@@ -331,16 +331,16 @@ var parsePageThree = function(html, schoolData) {
         applicants: $('.onecolumntable').eq(-7).find('td').eq(-10).text(),
         foundToHaveNeed: $('.onecolumntable').eq(-7).find('td').eq(-9).text(),
         receivedAid: $('.onecolumntable').eq(-7).find('td').eq(-8).text(),
-        needFullyMet: $('onecolumntable').eq(-7).find('td').eq(-7).text(),
+        needFullyMet: $('.onecolumntable').eq(-7).find('td').eq(-7).text(),
         averagePercentOfNeedMet: $('.onecolumntable').eq(-7).find('td').eq(-6).text(),
         averageAward: $('.onecolumntable').eq(-7).find('td').eq(-5).text(),
-        meritBasedGift: $('.onecolumntable').eq(-7).find('td').eq(-1).text
+        meritBasedGift: $('.onecolumntable').eq(-7).find('td').eq(-1).text()
       },
       allUndergraduates: {
         applicants: $('.onecolumntable').eq(-6).find('td').eq(-10).text(),
         foundToHaveNeed: $('.onecolumntable').eq(-6).find('td').eq(-9).text(),
         receivedAid: $('.onecolumntable').eq(-6).find('td').eq(-8).text(),
-        needFullyMet: $('onecolumntable').eq(-6).find('td').eq(-7).text(),
+        needFullyMet: $('.onecolumntable').eq(-6).find('td').eq(-7).text(), // XXX
         averagePercentOfNeedMet: $('.onecolumntable').eq(-6).find('td').eq(-6).text(),
         averageAward: $('.onecolumntable').eq(-6).find('td').eq(-5).text(),
         meritBasedGift: $('.onecolumntable').eq(-6).find('td').eq(-1).text()
@@ -408,7 +408,7 @@ var parsePageFive = function(html, schoolData) {
 var parsePageSix = function(html, schoolData) {
   var $ = cheerio.load(html);
   schoolData.demographics = $('.onecolumntable').eq(-3).find('td').eq(-4).html().indexOf('Not reported') === -1 ? $('.onecolumntable').eq(-3).find('td').eq(-4).html().split('<br>').map(function(el, i) { return { race : el.split('%')[1].trim(), percentage: parseFloat(el) }}) : null;
-  schoolData.percentInternationalStudents = $('onecolumntable').eq(-3).find('td').eq(-3).text().split('%')[0];
+  schoolData.percentInternationalStudents = $('.onecolumntable').eq(-3).find('td').eq(-3).text().split('%')[0];
   schoolData.averageStudentAge = $('.onecolumntable').eq(-3).find('td').eq(-2).text();
   schoolData.retention = {
     percentOfFirstYearStudentsReturning: $('.onecolumntable').eq(-2).find('td').eq(-4).text(),
@@ -430,7 +430,7 @@ var rawHtmlFilename = function(idNumber, page) {
 
 
 
-var parseAll = function(dir, concurrency, done) {
+var parseAll = function(concurrency) {
   var idRange = _.range(COLLEGE_ID_RANGE[0], COLLEGE_ID_RANGE[1] + 1);
   var pageRange = [1,2,3,4,5,6];
   var pageParsers = {
@@ -492,15 +492,17 @@ var parseAll = function(dir, concurrency, done) {
         }
       });
     }).then(function(schoolData) {
-      return new Promise(function(resolve, reject) {
-        var out = path.join(OUTPUT_PATH, idNumber + ".json");
-        fs.writeFile(out, JSON.stringify(schoolData, null, 2), function(err) {
-          if (err) {
-            return reject(err);
-          }
-          resolve();
+      if (schoolData) {
+        return new Promise(function(resolve, reject) {
+          var out = path.join(OUTPUT_PATH, idNumber + ".json");
+          fs.writeFile(out, JSON.stringify(schoolData, null, 2), function(err) {
+            if (err) {
+              return reject(err);
+            }
+            resolve();
+          });
         });
-      });
+      }
     }).catch(function(err) {
       if (err.ok) {
         err.log && console.log(err.message);
@@ -509,14 +511,14 @@ var parseAll = function(dir, concurrency, done) {
         throw err;
       }
     });
-  });
+  }, {concurrency: concurrency});
 };
  
 if (require.main === module) {
   console.log('-------------------------------------------------------------');
   console.log('processing...');
   console.log('-------------------------------------------------------------');
-  parseAll().then(function() {
+  parseAll(16).then(function() {
     console.log('-------------------------------------------------------------');
     console.log('finished.');
     console.log('-------------------------------------------------------------');
