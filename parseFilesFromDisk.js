@@ -340,7 +340,7 @@ var parsePageThree = function(html, schoolData) {
         applicants: $('.onecolumntable').eq(-6).find('td').eq(-10).text(),
         foundToHaveNeed: $('.onecolumntable').eq(-6).find('td').eq(-9).text(),
         receivedAid: $('.onecolumntable').eq(-6).find('td').eq(-8).text(),
-        needFullyMet: $('.onecolumntable').eq(-6).find('td').eq(-7).text(), // XXX
+        needFullyMet: $('.onecolumntable').eq(-6).find('td').eq(-7).text(),
         averagePercentOfNeedMet: $('.onecolumntable').eq(-6).find('td').eq(-6).text(),
         averageAward: $('.onecolumntable').eq(-6).find('td').eq(-5).text(),
         meritBasedGift: $('.onecolumntable').eq(-6).find('td').eq(-1).text()
