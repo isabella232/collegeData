@@ -1,14 +1,22 @@
 import os
 import re
+import json
 from scrapy import Spider
 
-OUTPUT = os.path.join(os.path.dirname(__file__), "..", "raw_html")
+BASE = os.path.join(os.path.dirname(__file__), "..")
+OUTPUT = os.path.join(BASE, "raw_html")
+with open(os.path.join(BASE, "conf.json")) as fh:
+    CONF = json.load(fh)
+
 
 if not os.path.exists(OUTPUT):
     os.makedirs(OUTPUT)
 
 def slugify_url(url):
     return re.sub("[^-a-zA-Z0-9_\.]", "-", url)
+
+def wikipedia_slugify_title(title):
+    return title.replace(" ", "_")
 
 def output_filename(url):
     return os.path.join(OUTPUT, slugify_url(url))
@@ -22,12 +30,23 @@ def generate_urls(start, end):
                 urls.append(url)
     return urls
 
+def wikipedi_urls(*titles):
+    urls = []
+    for title in titles:
+        urls.append(
+            "https://en.wikipedia.org/wiki/{}".format(wikipedia_slugify_title(title))
+        )
+    return urls
+
 class CollegeSpider(Spider):
     name = "collegespider"
 
-    start_urls = generate_urls(6, 3341)
+    start_urls = generate_urls(CONF['minSchoolId'], CONF['maxSchoolId']) + wikipedi_urls(
+        "List of historically black colleges and universities",
+        "List of United States military schools and academies",
+    )
 
-    download_delay = 5
+    download_delay = CONF['throttle'] / 1000.
 
     def parse(self, res):
         if res.status == 200:

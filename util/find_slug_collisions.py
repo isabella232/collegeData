@@ -8,8 +8,8 @@ slugs = defaultdict(list)
 def slugify(*parts):
     return re.sub('[^-a-z0-9]+', '-', " ".join(parts).lower())
 
-for filename in os.listdir("data"):
-    with open(os.path.join("data", filename)) as fh:
+for filename in os.listdir("../data"):
+    with open(os.path.join("../data", filename)) as fh:
         data = json.load(fh)
         if data['name']:
             citystate = data['citystate']

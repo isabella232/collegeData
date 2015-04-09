@@ -1,47 +1,56 @@
+#!/usr/bin/env node
 var _ = require('underscore');
 var fs = require('fs');
 var path = require("path");
 var cheerio = require('cheerio');
 var Promise = require("bluebird");
+var conf = require("./conf.json");
+
+var converters = require('./converters');
+var c = converters;
 
 var HTML_PATH = path.join(__dirname, 'raw_html');
 var OUTPUT_PATH = path.join(__dirname, 'data');
-var COLLEGE_ID_RANGE = [6, 3341];
 
 var parsePageOne = function (html, schoolData) {
   var $ = cheerio.load(html);
 
-  schoolData.name = $('.cp_left').find('h1').text();
-  schoolData.citystate = $('.cp_left').find('.citystate').text().trim();
-  schoolData.website = $('.onecolumntable').eq(-7).find('td > a').text();
-  schoolData.schoolType = $('.onecolumntable').eq(-7).find('td').eq(-6).text();
-  schoolData.coed = $('.onecolumntable').eq(-7).find('td').eq(-5).text();
-  schoolData.population = $('.onecolumntable').eq(-7).find('td').eq(-4).text();
-  schoolData.women = $('.onecolumntable').eq(-7).find('td').eq(-3).text();
-  schoolData.men = $('.onecolumntable').eq(-7).find('td').eq(-2).text();
+  schoolData.name = c.stringy($('.cp_left').find('h1').text());
+  var citystate = c.cityState($('.cp_left').find('.citystate').text());
+  schoolData.city = citystate ? citystate.city : null;
+  schoolData.state = citystate ? citystate.state : null;
+  schoolData.country = citystate && citystate.state === "ON" ? "Canada" : "United States";
+  schoolData.website = c.validWebsite($('.onecolumntable').eq(-7).find('td > a').text());
+  schoolData.schoolType = c.stringy($('.onecolumntable').eq(-7).find('td').eq(-6).text());
+  var coed = $('.onecolumntable').eq(-7).find('td').eq(-5).text().trim();
+  schoolData.gender = {'Yes': 'coed', 'No, men only': 'Men', 'No, women only': 'Women'}[coed] || null;
+  schoolData.population = c.numbery($('.onecolumntable').eq(-7).find('td').eq(-4).text());
+  schoolData.women = c.totalAndPercent($('.onecolumntable').eq(-7).find('td').eq(-3).text());
+  schoolData.men = c.totalAndPercent($('.onecolumntable').eq(-7).find('td').eq(-2).text());
+
+  var scoreHalfClassRange = function(col) {
+    var text = $(".onecolumntable").eq(-5).find("td").eq(col).text();
+    var range;
+    var parts = text.split('average');
+    var average = c.numbery(parts[0]);
+    if (parts.length !== 2 || parts[1].indexOf('Not reported') !== -1) {
+      range = {low: null, high: null};
+    } else {
+      range = c.dashRange(parts[1].slice(0,8));
+    }
+    return {average: average, halfClassRange: range};
+  }
 
   schoolData.generalAdmissionsData = {
-    difficulty: $('.onecolumntable').eq(-6).find('td').eq(-5).text(),
-    acceptanceRate: $('.onecolumntable').eq(-6).find('td').eq(-4).text(),
-    earlyAction: $('.onecolumntable').eq(-6).find('td').eq(-3).text(),
-    earlyDecision: $('.onecolumntable').eq(-6).find('td').eq(-2).text(),
-    regularDeadline: $('.onecolumntable').eq(-6).find('td').eq(-1).text(),
-    SATMath: {
-      average: $('.onecolumntable').eq(-5).find('td').eq(-4).text().split('average')[0].trim(),
-      halfClassRange: $('.onecolumntable').eq(-5).find('td').eq(-4).text().split('average')[0].indexOf('Not reported') > -1 || $('.onecolumntable').eq(-5).find('td').eq(-4).text().split('average').length !== 2 ? null : $('.onecolumntable').eq(-5).find('td').eq(-4).text().split('average')[1].slice(0,8).trim()
-    },
-    SATReading: {
-      average: $('.onecolumntable').eq(-5).find('td').eq(-3).text().split('average')[0].trim(),
-      halfClassRange: $('.onecolumntable').eq(-5).find('td').eq(-3).text().split('average')[0].indexOf('Not reported') > -1 || $('.onecolumntable').eq(-5).find('td').eq(-3).text().split('average').length !== 2 ? null : $('.onecolumntable').eq(-5).find('td').eq(-3).text().split('average')[1].slice(0,8).trim()
-    },
-    SATWriting: {
-      average: $('.onecolumntable').eq(-5).find('td').eq(-2).text().split('average')[0].trim(),
-      halfClassRange: $('.onecolumntable').eq(-5).find('td').eq(-2).text().split('average')[0].indexOf('Not reported') > -1 || $('.onecolumntable').eq(-5).find('td').eq(-2).text().split('average').length !== 2 ? null : $('.onecolumntable').eq(-5).find('td').eq(-2).text().split('average')[1].slice(0,8).trim()
-    },
-    ACTComposite: {
-      average: $('.onecolumntable').eq(-5).find('td').eq(-1).text().split('average')[0].trim(),
-      halfClassRange: $('.onecolumntable').eq(-5).find('td').eq(-1).text().split('average')[0].indexOf('Not reported') > -1 || $('.onecolumntable').eq(-5).find('td').eq(-1).text().split('average').length !== 2 ? null : $('.onecolumntable').eq(-5).find('td').eq(-1).text().split('average')[1].slice(0,6).trim()
-    }
+    difficulty: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-5).text()),
+    acceptanceRate: c.totalAndPercent($('.onecolumntable').eq(-6).find('td').eq(-4).text()),
+    earlyAction: c.booly($('.onecolumntable').eq(-6).find('td').eq(-3).text()),
+    earlyDecision: c.booly($('.onecolumntable').eq(-6).find('td').eq(-2).text()),
+    regularDeadline: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-1).text()),
+    SATMath: scoreHalfClassRange(-4),
+    SATReading: scoreHalfClassRange(-3),
+    SATWriting: scoreHalfClassRange(-2),
+    ACTComposite: scoreHalfClassRange(-1)
   };
 };
 var parsePageTwo = function (html, schoolData) {
@@ -50,36 +59,36 @@ var parsePageTwo = function (html, schoolData) {
   schoolData.specificAdmissionsData = {};
 
   schoolData.specificAdmissionsData.GPA = {
-    average: $('.onecolumntable').eq(-4).find('td').eq(-7).text(),
+    average: c.numbery($('.onecolumntable').eq(-4).find('td').eq(-7).text()),
     range1: {
       lowRange: 3.75,
       highRange: 4.00,
-      percentageOfFreshmen: $('.onecolumntable').eq(-4).find('td').eq(-6).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-4).find('td').eq(-6).text())
     },
     range2: {
       lowRange: 3.50,
       highRange: 3.74,
-      percentageOfFreshmen: $('.onecolumntable').eq(-4).find('td').eq(-5).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-4).find('td').eq(-5).text())
     },
     range3: {
       lowRange: 3.25,
       highRange: 3.49,
-      percentageOfFreshmen: $('.onecolumntable').eq(-4).find('td').eq(-4).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-4).find('td').eq(-4).text())
     },
     range4: {
       lowRange: 3.00,
       highRange: 3.24,
-      percentageOfFreshmen: $('.onecolumntable').eq(-4).find('td').eq(-3).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-4).find('td').eq(-3).text())
     },
     range5: {
       lowRange: 2.50,
       highRange:2.99,
-      percentageOfFreshmen: $('.onecolumntable').eq(-4).find('td').eq(-2).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-4).find('td').eq(-2).text())
     },
     range6: {
       lowRange: 2.00,
       highRange: 2.49,
-      percentageOfFreshmen: $('.onecolumntable').eq(-4).find('td').eq(-1).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-4).find('td').eq(-1).text())
     }
   };
 
@@ -87,32 +96,32 @@ var parsePageTwo = function (html, schoolData) {
     range1: {
       lowRange: 700,
       highRange: 800,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-6).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-6).text())
     },
     range2: {
       lowRange: 600,
       highRange: 700,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-5).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-5).text())
     },
     range3: {
       lowRange: 500,
       highRange: 600,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-4).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-4).text())
     },
     range4: {
       lowRange: 400,
       highRange: 500,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-3).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-3).text())
     },
     range5: {
       lowRange: 300,
       highRange: 400,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-2).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-2).text())
     },
     range6: {
       lowRange: 200,
       highRange: 300,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-1).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-1).text())
     }
   }
 
@@ -120,32 +129,32 @@ var parsePageTwo = function (html, schoolData) {
     range1: {
       lowRange: 700,
       highRange: 800,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-13).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-13).text())
     },
     range2: {
       lowRange: 600,
       highRange: 700,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-12).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-12).text())
     },
     range3: {
       lowRange: 500,
       highRange: 600,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-11).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-11).text())
     },
     range4: {
       lowRange: 400,
       highRange: 500,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-10).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-10).text())
     },
     range5: {
       lowRange: 300,
       highRange: 400,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-9).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-9).text())
     },
     range6: {
       lowRange: 200,
       highRange: 300,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-8).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-8).text())
     }
   }
 
@@ -153,32 +162,32 @@ var parsePageTwo = function (html, schoolData) {
     range1: {
       lowRange: 700,
       highRange: 800,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-20).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-20).text())
     },
     range2: {
       lowRange: 600,
       highRange: 700,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-19).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-19).text())
     },
     range3: {
       lowRange: 500,
       highRange: 600,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-18).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-18).text())
     },
     range4: {
       lowRange: 400,
       highRange: 500,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-17).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-17).text())
     },
     range5: {
       lowRange: 300,
       highRange: 400,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-16).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-16).text())
     },
     range6: {
       lowRange: 200,
       highRange: 300,
-      percentageOfFreshmen: $('.onecolumntable').eq(-3).find('td').eq(-15).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-3).find('td').eq(-15).text())
     }
   }
 
@@ -186,102 +195,102 @@ var parsePageTwo = function (html, schoolData) {
     range1: {
       lowRange: 30,
       highRange: 36,
-      percentageOfFreshmen: $('.onecolumntable').eq(-2).find('td').eq(-6).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-6).text())
     },
     range2: {
       lowRange: 24,
       highRange: 29,
-      percentageOfFreshmen: $('.onecolumntable').eq(-2).find('td').eq(-5).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-5).text())
     },
     range3: {
       lowRange: 18,
       highRange: 23,
-      percentageOfFreshmen: $('.onecolumntable').eq(-2).find('td').eq(-4).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-4).text())
     },
     range4: {
       lowRange: 12,
       highRange: 17,
-      percentageOfFreshmen: $('.onecolumntable').eq(-2).find('td').eq(-3).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-3).text())
     },
     range5: {
       lowRange: 6,
       highRange: 11,
-      percentageOfFreshmen: $('.onecolumntable').eq(-2).find('td').eq(-2).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-2).text())
     },
     range6: {
       lowRange: 1,
       highRange: 5,
-      percentageOfFreshmen: $('.onecolumntable').eq(-2).find('td').eq(-1).text()
+      percentageOfFreshmen: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-1).text())
     }
   }
 
   schoolData.specificAdmissionsData.courses = {
     english: {
-      requiredUnits: $('.laligntable').first().find('td').eq(-14).text(),
-      recommendedUnits: $('.laligntable').first().find('td').eq(-13).text()
+      requiredUnits: c.numbery($('.laligntable').first().find('td').eq(-14).text()),
+      recommendedUnits: c.numbery($('.laligntable').first().find('td').eq(-13).text())
     },
     mathematics: {
-      requiredUnits: $('.laligntable').first().find('td').eq(-12).text(),
-      recommendedUnits: $('.laligntable').first().find('td').eq(-11).text()
+      requiredUnits: c.numbery($('.laligntable').first().find('td').eq(-12).text()),
+      recommendedUnits: c.numbery($('.laligntable').first().find('td').eq(-11).text())
     },
     science: {
-      requiredUnits: $('.laligntable').first().find('td').eq(-10).text(),
-      recommendedUnits: $('.laligntable').first().find('td').eq(-9).text()
+      requiredUnits: c.numbery($('.laligntable').first().find('td').eq(-10).text()),
+      recommendedUnits: c.numbery($('.laligntable').first().find('td').eq(-9).text())
     },
     foreignLanguage: {
-      requiredUnits: $('.laligntable').first().find('td').eq(-8).text(),
-      recommendedUnits: $('.laligntable').first().find('td').eq(-7).text()
+      requiredUnits: c.numbery($('.laligntable').first().find('td').eq(-8).text()),
+      recommendedUnits: c.numbery($('.laligntable').first().find('td').eq(-7).text())
     },
     socialStudies: {
-      requiredUnits: $('.laligntable').first().find('td').eq(-6).text(),
-      recommendedUnits: $('.laligntable').first().find('td').eq(-5).text()
+      requiredUnits: c.numbery($('.laligntable').first().find('td').eq(-6).text()),
+      recommendedUnits: c.numbery($('.laligntable').first().find('td').eq(-5).text())
     },
     history: {
-      requiredUnits: $('.laligntable').first().find('td').eq(-4).text(),
-      recommendedUnits: $('.laligntable').first().find('td').eq(-3).text()
+      requiredUnits: c.numbery($('.laligntable').first().find('td').eq(-4).text()),
+      recommendedUnits: c.numbery($('.laligntable').first().find('td').eq(-3).text())
     },
     electives: {
-      requiredUnits: $('.laligntable').first().find('td').eq(-2).text(),
-      recommendedUnits: $('.laligntable').first().find('td').eq(-1).text()
+      requiredUnits: c.numbery($('.laligntable').first().find('td').eq(-2).text()),
+      recommendedUnits: c.numbery($('.laligntable').first().find('td').eq(-1).text())
     }
   };
 
   schoolData.specificAdmissionsData.testing = {
     SATorACT: {
-      required: $('.laligntable').last().find('td').eq(-14).text().indexOf('Required') > -1 ? true : false,
-      scoresMustBeReceivedBy: $('.laligntable').last().find('td').eq(-13).text()
+      required: c.booly($('.laligntable').last().find('td').eq(-14).text().indexOf('Required') > -1 ? true : false),
+      scoresMustBeReceivedBy: c.stringy($('.laligntable').last().find('td').eq(-13).text())
     }
   }
 
   schoolData.specificAdmissionsData.applying = {
-    address: $('.onecolumntable').eq(-10).find('td').eq(-5).text() + " " + $('.onecolumntable').eq(-10).find('td').eq(-4).text(),
-    phone: $('.onecolumntable').eq(-10).find('td').eq(-3).text(),
-    fax: $('.onecolumntable').eq(-10).find('td').eq(-2).text(),
-    email: $('#section6').find('table').first().find('td').last().text(), 
-    applicationFee: $('.onecolumntable').eq(-9).find('td').eq(-7).text(),
-    feeWaiverAvailable: $('.onecolumntable').eq(-9).find('td').eq(-6).text(),
-    deferOption: $('.onecolumntable').eq(-9).find('td').eq(-2).text(),
+    address: c.stringy($('.onecolumntable').eq(-10).find('td').eq(-5).text() + " " + $('.onecolumntable').eq(-10).find('td').eq(-4).text()),
+    phone: c.stringy($('.onecolumntable').eq(-10).find('td').eq(-3).text()),
+    fax: c.stringy($('.onecolumntable').eq(-10).find('td').eq(-2).text()),
+    email: c.validEmail($('#section6').find('table').first().find('td').last().text()), 
+    applicationFee: c.stringy($('.onecolumntable').eq(-9).find('td').eq(-7).text()),
+    feeWaiverAvailable: c.stringy($('.onecolumntable').eq(-9).find('td').eq(-6).text()),
+    deferOption: c.stringy($('.onecolumntable').eq(-9).find('td').eq(-2).text()),
     earlyDecision: {
-      offered: $('.onecolumntable').eq(-8).find('td').eq(-6).text(),
-      deadline: $('.onecolumntable').eq(-8).find('td').eq(-5).text(),
-      notification: $('.onecolumntable').eq(-8).find('td').eq(-4).text()
+      offered: c.booly($('.onecolumntable').eq(-8).find('td').eq(-6).text()),
+      deadline: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-5).text()),
+      notification: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-4).text())
     },
     earlyAction: {
-      offered: $('.onecolumntable').eq(-8).find('td').eq(-3).text(),
-      deadline: $('.onecolumntable').eq(-8).find('td').eq(-2).text(),
-      notification: $('.onecolumntable').eq(-8).find('td').eq(-1).text()
+      offered: c.booly($('.onecolumntable').eq(-8).find('td').eq(-3).text()),
+      deadline: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-2).text()),
+      notification: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-1).text())
     },
     commonApplication: {
-      accepted: $('.onecolumntable').eq(-7).find('td').eq(-3).text().indexOf('Accepted') > -1 ? true : false,
-      supplementRequired: $('.onecolumntable').eq(-7).find('td').eq(-3).text().indexOf('supp') > -1 ? true : false
+      accepted: c.booly($('.onecolumntable').eq(-7).find('td').eq(-3).text().indexOf('Accepted') > -1 ? true : false),
+      supplementRequired: c.booly($('.onecolumntable').eq(-7).find('td').eq(-3).text().indexOf('supp') > -1 ? true : false)
     },
-    universalApp: $('.onecolumntable').eq(-7).find('td').eq(-2).text().indexOf('Accepted') > -1 ? true : false,
+    universalApp: c.booly($('.onecolumntable').eq(-7).find('td').eq(-2).text().indexOf('Accepted') > -1 ? true : false),
     requirements: {
-      interview: $('.onecolumntable').eq(-6).find('td').eq(-5).text(),
-      personalStatement: $('.onecolumntable').eq(-6).find('td').eq(-4).text(),
-      numberOfRecLettersRequired: parseInt($('.onecolumntable').eq(-6).find('td').eq(-3).text()),
-      other: $('.onecolumntable').eq(-6).find('td').eq(-2).text(),
-      financialNeed: $('.onecolumntable').eq(-6).find('td').eq(-1).text()
+      interview: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-5).text()),
+      personalStatement: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-4).text()),
+      numberOfRecLettersRequired: c.numbery($('.onecolumntable').eq(-6).find('td').eq(-3).text()),
+      other: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-2).text()),
+      financialNeed: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-1).text())
     }
   }
 };
@@ -295,60 +304,95 @@ var parsePageThree = function(html, schoolData) {
   if (totalCostArray.length > 1) {
     schoolData.tuition.costOfAttendance = {
         totalCost: {
-          inStateTotal: totalCostArray[0].split(':')[1].trim(),
-          outOfStateTotal: totalCostArray[1].split(':')[1].trim()
+          inState: c.numbery(totalCostArray[0].split(':')[1]),
+          outOfState: c.numbery(totalCostArray[1].split(':')[1])
         },
-        inStateTuition: $('.onecolumntable').eq(-10).find('td').eq(-5).html().split("<br>")[0].split(':')[1].trim(),
-        outOfStateTuition: $('.onecolumntable').eq(-10).find('td').eq(-5).html().split("<br>")[1].split(':')[1].trim(),
-        roomAndBoard: $('.onecolumntable').eq(-10).find('td').eq(-4).html(),
-        booksAndSupplies: $('.onecolumntable').eq(-10).find('td').eq(-3).html(),
-        otherExpenses: $('.onecolumntable').eq(-10).find('td').eq(-2).html(),
-        averageGraduateDebt: $('.onecolumntable').eq(-5).find('td').eq(-4).html().trim()
+        tuition: {
+          inState: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-5).html().split("<br>")[0].split(':')[1]),
+          outOfState: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-5).html().split("<br>")[1].split(':')[1]),
+        },
+        roomAndBoard: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-4).html()),
+        booksAndSupplies: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-3).html()),
+        otherExpenses: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-2).html()),
+        averageGraduateDebt: c.numbery($('.onecolumntable').eq(-5).find('td').eq(-4).html())
     }
   }
 
   if (totalCostArray.length === 1) {
-    schoolData.tuition.tuitionAndFees = {
-      totalCost: totalCostArray[0],
-      tuition: $('.onecolumntable').eq(-10).find('td').eq(-5).html(),
-      roomAndBoard: $('.onecolumntable').eq(-10).find('td').eq(-4).html(),
-      booksAndSupplies: $('.onecolumntable').eq(-10).find('td').eq(-3).html(),
-      averageGraduateDebt: $('.onecolumntable').eq(-5).find('td').eq(-4).html().trim()
+    schoolData.tuition.costOfAttendance = {
+      totalCost: {
+        general: c.numbery(totalCostArray[0]),
+      },
+      tuition: {
+        general: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-5).html()),
+      },
+      roomAndBoard: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-4).html()),
+      booksAndSupplies: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-3).html()),
+      otherExpenses: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-2).html()),
+      averageGraduateDebt: c.numbery($('.onecolumntable').eq(-5).find('td').eq(-4).html())
     }
   }
 
   var newPriceCalculator = $("#section10").find("table").eq(-3).find("a")[1];
-  var website = $('#section10').find('table').eq(-3).find('a')[0];
-  schoolData.tuition = {
-    financialAid: {
-      emailContact: $('#section10').find('table').eq(-3).find('td').eq(-3).text().trim(),
-      website: website ? website.attribs.href : null,
-      netPriceCalculator: newPriceCalculator ? newPriceCalculator.attribs.href : null,
-      applicationDeadline: $('.onecolumntable').eq(-8).find('td').eq(-3).text(),
-      awardDate: $('.onecolumntable').eq(-8).find('td').eq(-2).text(),
-      FAFSACode: $('#section10').find('table').eq(-1).find('tr').last().html().trim().split(' ').pop().slice(0,6),
-      freshmen: {
-        applicants: $('.onecolumntable').eq(-7).find('td').eq(-10).text(),
-        foundToHaveNeed: $('.onecolumntable').eq(-7).find('td').eq(-9).text(),
-        receivedAid: $('.onecolumntable').eq(-7).find('td').eq(-8).text(),
-        needFullyMet: $('.onecolumntable').eq(-7).find('td').eq(-7).text(),
-        averagePercentOfNeedMet: $('.onecolumntable').eq(-7).find('td').eq(-6).text(),
-        averageAward: $('.onecolumntable').eq(-7).find('td').eq(-5).text(),
-        meritBasedGift: $('.onecolumntable').eq(-7).find('td').eq(-1).text()
-      },
-      allUndergraduates: {
-        applicants: $('.onecolumntable').eq(-6).find('td').eq(-10).text(),
-        foundToHaveNeed: $('.onecolumntable').eq(-6).find('td').eq(-9).text(),
-        receivedAid: $('.onecolumntable').eq(-6).find('td').eq(-8).text(),
-        needFullyMet: $('.onecolumntable').eq(-6).find('td').eq(-7).text(),
-        averagePercentOfNeedMet: $('.onecolumntable').eq(-6).find('td').eq(-6).text(),
-        averageAward: $('.onecolumntable').eq(-6).find('td').eq(-5).text(),
-        meritBasedGift: $('.onecolumntable').eq(-6).find('td').eq(-1).text()
-      },
-      borrowing: {
-        percentOfGraduatesWithLoans: $('.onecolumntable').eq(-5).find('td').eq(-5).text(),
-        averageIndebtednessOfGraduates: $('.onecolumntable').eq(-5).find('td').eq(-4).text()
-      }
+  var websiteEl = $('#section10').find('table').eq(-3).find('a')[0];
+  var website = websiteEl ? websiteEl.attribs.href : null;
+  var email = $('#section10').find('table').eq(-3).find('td').eq(-3).text().trim();
+  // special cases for bad incoming data.
+  if (email === "aacosta.edu") {
+    email = "";
+  }
+  if (email.substring(email.length - 1, email.length) === ".") {
+    email = email.substring(0, email.length - 1);
+  }
+  if (website === "http://www/nysid.edu/netpricecalculator") {
+    website = "http://www.nysid.edu/netpricecalculator";
+  }
+
+  var fafsaText = $('#section10').find('table').eq(-1).find('tr').last().text();
+  var match = /FAFSA\s+Code\s+is\s+(\d+)/.exec(fafsaText);
+  var fafsaCode = match ? c.stringy(match[1]) : null;
+  var meritBasedGift = function(val) {
+    val = c.stringy(val);
+    var isnull = val === null;
+    var totalMatch = !isnull && /^([\d,]+)/.exec(val);
+    var percentMatch = !isnull && /\(([\d\.]+)%\)/.exec(val)
+    var averageMatch = !isnull && /\$([\d\.\,]+)$/.exec(val)
+    return {
+      total: totalMatch ? c.numbery(totalMatch[1]) : null,
+      percent: percentMatch ? c.numbery(percentMatch[1]) : null,
+      averageAward: averageMatch ? c.numbery(averageMatch[1]) : null
+    }
+  }
+
+  schoolData.tuition.financialAid = {
+    emailContact: c.validEmail(email),
+    website: c.validWebsite(website),
+    netPriceCalculator: c.validWebsite(newPriceCalculator ? newPriceCalculator.attribs.href : null),
+    applicationDeadline: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-3).text()),
+    awardDate: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-2).text()),
+    FAFSACode: fafsaCode,
+
+    freshmen: {
+      applicants: c.totalAndPercent($('.onecolumntable').eq(-7).find('td').eq(-10).text()),
+      foundToHaveNeed: c.totalAndPercent($('.onecolumntable').eq(-7).find('td').eq(-9).text()),
+      receivedAid: c.totalAndPercent($('.onecolumntable').eq(-7).find('td').eq(-8).text()),
+      needFullyMet: c.totalAndPercent($('.onecolumntable').eq(-7).find('td').eq(-7).text()),
+      averagePercentOfNeedMet: c.percenty($('.onecolumntable').eq(-7).find('td').eq(-6).text()),
+      averageaward: c.numbery($('.onecolumntable').eq(-7).find('td').eq(-5).text()),
+      meritBasedGift: meritBasedGift($('.onecolumntable').eq(-7).find('td').eq(-1).text())
+    },
+    allUndergraduates: {
+      applicants: c.totalAndPercent($('.onecolumntable').eq(-6).find('td').eq(-10).text()),
+      foundToHaveNeed: c.totalAndPercent($('.onecolumntable').eq(-6).find('td').eq(-9).text()),
+      receivedAid: c.totalAndPercent($('.onecolumntable').eq(-6).find('td').eq(-8).text()),
+      needFullyMet: c.totalAndPercent($('.onecolumntable').eq(-6).find('td').eq(-7).text()),
+      averagePercentOfNeedMet: c.percenty($('.onecolumntable').eq(-6).find('td').eq(-6).text()),
+      averageAward: c.numbery($('.onecolumntable').eq(-6).find('td').eq(-5).text()),
+      meritBasedGift: meritBasedGift($('.onecolumntable').eq(-6).find('td').eq(-1).text())
+    },
+    borrowing: {
+      percentOfGraduatesWithLoans: c.percenty($('.onecolumntable').eq(-5).find('td').eq(-5).text()),
+      averageIndebtednessOfGraduates: c.numbery($('.onecolumntable').eq(-5).find('td').eq(-4).text())
     }
   }
 };
@@ -356,8 +400,12 @@ var parsePageThree = function(html, schoolData) {
 
 var parsePageFour = function(html, schoolData) {
   var $ = cheerio.load(html);
-  schoolData.undergraduateMajors = _.uniq($('.collist').find('li').map(function(i, el) { return $(this).text().trim() }).get());
-  schoolData.mostPopularMajors = $('.onecolumntable').eq(-11).find('td').eq(-5).text().split(',').map(function(el, i) { return el.trim() });
+  schoolData.undergraduateMajors = _.uniq($('.collist').find('li').map(function(i, el) {
+    return c.stringy($(this).text())
+  }).get());
+  schoolData.mostPopularMajors = $('.onecolumntable').eq(-11).find('td').eq(-5).text().split(',').map(function(el, i) {
+    return c.stringy(el);
+  });
   schoolData.studyAbroad = $('.onecolumntable').eq(-11).find('td').eq(-2).text().indexOf('Offered') > -1 ? true : false;
   schoolData.IBCreditsAccepted = $('.onecolumntable').eq(-8).find('td').eq(-3).text();
   schoolData.APCreditsAccepted = $('.onecolumntable').eq(-8).find('td').eq(-2).text();
@@ -367,54 +415,70 @@ var parsePageFour = function(html, schoolData) {
 var parsePageFive = function(html, schoolData) {
   var $ = cheerio.load(html);
   schoolData.campusSetting = {
-    localPopulation: $('.onecolumntable').eq(-10).find('td').eq(-4).text(),
-    environment: $('.onecolumntable').eq(-10).find('td').eq(-2).text(),
-    nearestMetropolitanArea: $('.onecolumntable').eq(-10).find('td').eq(-3).text(),
-    averageLowTempJanuary: parseInt($('.onecolumntable').eq(-9).find('td').eq(-2).text().split(',')[0]),
-    averageHighTempSeptember: parseInt($('.onecolumntable').eq(-9).find('td').eq(-2).text().split(',')[1]),
-    rainyDaysPerYear: parseInt($('.onecolumntable').eq(-9).find('td').eq(-1).text()),
-    linkToCampusMap: $('.onecolumntable').eq(-8).find('td').find('a').length > 0 ? $('.onecolumntable').eq(-8).find('td').find('a')[0].href : null,
-    nearestAirport: $('.onecolumntable').eq(-8).find('td').eq(-3).text(),
-    nearestBusStation: $('.onecolumntable').eq(-8).find('td').eq(-2).text(),
-    nearestTrainStation: $('.onecolumntable').eq(-8).find('td').eq(-1).text(),
+    localPopulation: c.numbery($('.onecolumntable').eq(-10).find('td').eq(-4).text()),
+    environment: c.stringy($('.onecolumntable').eq(-10).find('td').eq(-2).text()),
+    nearestMetropolitanArea: c.stringy($('.onecolumntable').eq(-10).find('td').eq(-3).text()),
+    averageLowTempJanuary: c.numbery($('.onecolumntable').eq(-9).find('td').eq(-2).text().split(',')[0]),
+    averageHighTempSeptember: c.numbery($('.onecolumntable').eq(-9).find('td').eq(-2).text().split(',')[1]),
+    rainyDaysPerYear: c.numbery($('.onecolumntable').eq(-9).find('td').eq(-1).text()),
+    linkToCampusMap: c.validWebsite($('.onecolumntable').eq(-8).find('td').find('a').length > 0 ? $('.onecolumntable').eq(-8).find('td').find('a')[0].href : null),
+    nearestAirport: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-3).text()),
+    nearestBusStation: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-2).text()),
+    nearestTrainStation: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-1).text()),
     housing: {
-      types: $('.onecolumntable').eq(-7).find('td').eq(-6).text().split(','),
-      freshmenGuarantee: $('.onecolumntable').eq(-7).find('td').eq(-3).text(),
-      studentsInCollegeHousing: $('.onecolumntable').eq(-7).find('td').eq(-5).text(),
-      percentOfStudentsCommuting: $('.onecolumntable').eq(-7).find('td').eq(-2).text(),
-      requirements: $('.onecolumntable').eq(-7).find('td').eq(-4).text() 
+      types: _.map($('.onecolumntable').eq(-7).find('td').eq(-6).text().split(','), c.stringy),
+      freshmenGuarantee: c.stringy($('.onecolumntable').eq(-7).find('td').eq(-3).text()),
+      studentsInCollegeHousing: c.stringy($('.onecolumntable').eq(-7).find('td').eq(-5).text()),
+      percentOfStudentsCommuting: c.percenty($('.onecolumntable').eq(-7).find('td').eq(-2).text()),
+      requirements: c.stringy($('.onecolumntable').eq(-7).find('td').eq(-4).text()) 
     },
     sports: {
-      athleticConferences: $('.onecolumntable').eq(-4).find('td').eq(-3).text(),
-      mascot: $('.onecolumntable').eq(-4).find('td').eq(-2).text(),
+      athleticConferences: c.stringy($('.onecolumntable').eq(-4).find('td').eq(-3).text()),
+      mascot: c.stringy($('.onecolumntable').eq(-4).find('td').eq(-2).text()),
       varsitySportsOffered: {
-        mens: $('div #section24').find('table').eq(-3).find('th').filter(function(i, el){ return $(this).siblings().eq(-2).text().indexOf('x') > -1 }).map(function (i, el) { return $(this).text() }).get(),
-        womens: $('div #section24').find('table').eq(-3).find('th').filter(function(i, el){ return $(this).siblings().eq(-4).text().indexOf('x') > -1 }).map(function (i, el) { return $(this).text() }).get()
+        mens: $('div #section24').find('table').eq(-3).find('th').filter(function(i, el){ return $(this).siblings().eq(-2).text().indexOf('x') > -1 }).map(function (i, el) { return c.stringy($(this).text()) }).get(),
+        womens: $('div #section24').find('table').eq(-3).find('th').filter(function(i, el){ return $(this).siblings().eq(-4).text().indexOf('x') > -1 }).map(function (i, el) { return c.stringy($(this).text()) }).get()
       },
       sportsScholarshipsGiven: {
-        mens: $('div #section24').find('table').eq(-3).find('th').filter(function(i, el){ return $(this).siblings().eq(-1).text().indexOf('x') > -1 }).map(function (i, el) { return $(this).text() }).get(),
-        womens: $('div #section24').find('table').eq(-3).find('th').filter(function(i, el){ return $(this).siblings().eq(-3).text().indexOf('x') > -1 }).map(function (i, el) { return $(this).text() }).get()
+        mens: $('div #section24').find('table').eq(-3).find('th').filter(function(i, el){ return $(this).siblings().eq(-1).text().indexOf('x') > -1 }).map(function (i, el) { return c.stringy($(this).text()) }).get(),
+        womens: $('div #section24').find('table').eq(-3).find('th').filter(function(i, el){ return $(this).siblings().eq(-3).text().indexOf('x') > -1 }).map(function (i, el) { return c.stringy($(this).text()) }).get()
       }
     },
-    popularActivitiesAndOrganizations: $('.onecolumntable').eq(-1).find('td').eq(-4).text().split(','),
+    popularActivitiesAndOrganizations: _.map($('.onecolumntable').eq(-1).find('td').eq(-4).text().split(','), c.stringy),
     greekLife: {
-      percentofWomenInSororities: parseInt($('.onecolumntable').eq(-1).find('td').eq(-3).text()),
-      percentOfMenInFraternities: parseInt($('.onecolumntable').eq(-1).find('td').eq(-2).text())
+      percentofWomenInSororities: c.numbery($('.onecolumntable').eq(-1).find('td').eq(-3).text()),
+      percentOfMenInFraternities: c.numbery($('.onecolumntable').eq(-1).find('td').eq(-2).text())
     } ,
-    ROTC: $('.onecolumntable').eq(-1).find('td').eq(-1).text()
+    ROTC: c.stringy($('.onecolumntable').eq(-1).find('td').eq(-1).text())
   }
 }
 
 var parsePageSix = function(html, schoolData) {
   var $ = cheerio.load(html);
-  schoolData.demographics = $('.onecolumntable').eq(-3).find('td').eq(-4).html().indexOf('Not reported') === -1 ? $('.onecolumntable').eq(-3).find('td').eq(-4).html().split('<br>').map(function(el, i) { return { race : el.split('%')[1].trim(), percentage: parseFloat(el) }}) : null;
-  schoolData.percentInternationalStudents = $('.onecolumntable').eq(-3).find('td').eq(-3).text().split('%')[0];
-  schoolData.averageStudentAge = $('.onecolumntable').eq(-3).find('td').eq(-2).text();
+  var raceHtml = $('.onecolumntable').eq(-3).find('td').eq(-4).html();
+  if (raceHtml.indexOf('Not reported') === -1) {
+    schoolData.demographics = raceHtml.split('<br>').map(function(el, i) {
+      var parts = el.split('%');
+      return {
+        race : c.stringy(parts[1]),
+        percentage: c.percenty(parts[0])
+      }
+    });
+  } else {
+    schoolData.demographics = [];
+  }
+  schoolData.percentInternationalStudents = c.percenty($('.onecolumntable').eq(-3).find('td').eq(-3).text().split('%')[0]);
+  schoolData.averageStudentAge = c.numbery($('.onecolumntable').eq(-3).find('td').eq(-2).text());
+  // Fix a dirty data special case
+  var returning = $('.onecolumntable').eq(-2).find('td').eq(-4).text().trim();
+  if (returning === "712.0%") {
+    returning = "71.2%";
+  }
   schoolData.retention = {
-    percentOfFirstYearStudentsReturning: $('.onecolumntable').eq(-2).find('td').eq(-4).text(),
-    percentOfGraduatesWithin4Years: $('.onecolumntable').eq(-2).find('td').eq(-3).text().trim(),
-    percentOfGraduatesWithin5Years: $('.onecolumntable').eq(-2).find('td').eq(-2).text().trim(),
-    percentOfGraduatesWithin6Years: $('.onecolumntable').eq(-2).find('td').eq(-1).text().trim()
+    percentOfFirstYearStudentsReturning: c.percenty(returning),
+    percentOfGraduatesWithin4Years: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-3).text()),
+    percentOfGraduatesWithin5Years: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-2).text()),
+    percentOfGraduatesWithin6Years: c.percenty($('.onecolumntable').eq(-2).find('td').eq(-1).text())
   }
 };
 
@@ -430,8 +494,10 @@ var rawHtmlFilename = function(idNumber, page) {
 
 
 
+var noData = [];
 var parseAll = function(concurrency) {
-  var idRange = _.range(COLLEGE_ID_RANGE[0], COLLEGE_ID_RANGE[1] + 1);
+  var idRange = _.range(conf.minSchoolId, conf.maxSchoolId + 1);
+  //var idRange = [1111];
   var pageRange = [1,2,3,4,5,6];
   var pageParsers = {
     1: parsePageOne, 2: parsePageTwo, 3: parsePageThree,
@@ -466,7 +532,8 @@ var parseAll = function(concurrency) {
             if (html.indexOf("You requested a College Profile page that does not exist") != -1) {
               var err = new Error("College " + idNumber + " has no data.");
               err.ok = true;
-              err.log = true;
+              err.log = false;
+              noData.push(idNumber);
               reject(err);
             }
             if (err) { reject(err); }
@@ -518,7 +585,8 @@ if (require.main === module) {
   console.log('-------------------------------------------------------------');
   console.log('processing...');
   console.log('-------------------------------------------------------------');
-  parseAll(16).then(function() {
+  parseAll(32).then(function() {
+    console.log("No data: ", noData);
     console.log('-------------------------------------------------------------');
     console.log('finished.');
     console.log('-------------------------------------------------------------');

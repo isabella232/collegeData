@@ -1,30 +1,52 @@
+#!/usr/bin/env node
+/*
+ * Look through all of the JSON files with school data in ``./data/``, and
+ * fetch a cover photo and school logo for each one from linkedin.
+ *
+ * Data is written to ``./data/imageData.json``.
+ *
+ * Depends on the school data already having linked in URLs.
+ */
 var request = require('request');
 var cheerio = require('cheerio');
 var _ = require('underscore');
-var jsop = require('jsop');
-var schoolData = {};
-var google = require('google');
 var fs = require('fs');
-var start = 3186;
+var Promise = require("bluebird");
+var conf = require("./conf.json");
 
-// google.resultsPerPage = 20;
+var enqueueRequests = function(imageData) {
+  var requests = [];
+  var idRange = _.range(conf.minSchoolId, conf.maxSchoolId + 1);
 
-var getImages = function(start, end) {
-  var schoolLogo, logoLocation, coverPhoto;
+  _.each(idRange, function(schoolId) {
+    if (imageData[schoolId]) {
+      return;
+    }
+    var filename = __dirname + "/data/" + schoolId + ".json";
+    if (fs.existsSync(filename)) {
+      var schoolData = require(filename);
+      if (schoolData.linkedinLink) {
+        requests.push({
+          url: schoolData.linkedinLink,
+          schoolId: schoolId
+        });
+      }
+    }
+  });
+};
 
-  if ( start === end ) {
-    console.log('done');
-    return
-  };
 
-  if ( fs.existsSync("data/" + start + '.json') ) {
-
-    schoolData = jsop("data/" + start + '.json');
-
-    if (schoolData.linkedinLink) {
+var fetchImageUrls = function(req) {
+  var schoolId = req.schoolId;
+  var url = req.url;
+  return Promise.delay(conf.throttle).then(function() {
+    return new Promise(function(resolve, reject) {
       request({
         uri: schoolData.linkedinLink
       }, function(err, res, body) {
+        if (err) {
+          return reject(err);
+        }
         var $ = cheerio.load(body);
         logoLocation = body.search('("logoSrc")');
 
@@ -36,68 +58,40 @@ var getImages = function(start, end) {
 
         coverPhoto = $('#college-cover-photo').find('.cover-photo').attr('data-li-src');
 
-        schoolData.coverPhoto = coverPhoto;
-        schoolData.schoolLogo = schoolLogo;
+        imageData[schoolId] = {
+          coverPhoto: coverPhoto,
+          schoolLogo: schoolLogo
+        };
 
         console.log("#", start, " - ", schoolData.name);
         console.log(coverPhoto);
         console.log(schoolLogo);
-
+        resolve();
       });
-    } else {
-      console.log('no linkedin link for # ', start);
-    } 
-  } else {
-      console.log('no file for # ', start)
-  };
-
+    });
+  });
 };
 
-// function generateUrls(start, end) {
-//   var url = "";
-//   var googleQuery;
-//   var linkedinLink = "";
+var main = function() {
+  var datafile = __dirname + "/data/imageData.json";
+  if (fs.existsSync(datafile)) {
+    imageData = require(datafile);
+  } else {
+    imageData = {};
+  }
+  var requests = enqueueRequests(imageData);
+  Promise.map(requests, fetchImageUrls, {concurrency: 1}).then(function() {
+    return new Promise(function(resolve, reject) {
+      fs.writeFile(datafile, JSON.stringify(imageData, null, 2), function(err) {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      })
+    });
+  });
+};
 
-//   console.log(start);
-
-//   if ( fs.existsSync("data/" + start + '.json') ) {  
-//     schoolData = jsop("data/" + start + '.json');
-
-//     googleQuery = "'" + schoolData.name + "'" + " && 'linkedin.com/edu/'" ;
-
-//     console.log(googleQuery);
-
-//     google(googleQuery, function(err, next, links) {
-//       if (err) console.error("index - ", err);
-
-//       if (_.find(links, function(obj){ return obj.link.indexOf('linkedin.com/edu') > -1 && obj.title.indexOf(schoolData.name.slice(0,5)) > -1; })) {
-//         linkedinLink = _.find(links, function(obj){ return obj.link.indexOf('linkedin.com/edu') > -1 && obj.title.indexOf(schoolData.name.slice(0,5)) > -1; }).link;
-//         schoolData.linkedinLink = linkedinLink;
-//         console.log(linkedinLink);
-//       } else {
-//         schoolData.linkedinLink = undefined;
-//         console.log(undefined);
-//       }
-//     });
-
-//     if (start < end) {
-//       start = start + 1;
-//     } else {
-//       // getImages(googleSearchPages);
-//       console.log('script is done running');
-//       return
-//     };
-//   } else {
-//     console.log('else block')
-//     start++;
-//   }
-
-// };
-
-// start = 6 ; end = 3341 for the full collection of college data
-setInterval(function(){
-  getImages(start, 3341);
-  start++
-}, 5000);
-
-
+if (require.main === module) {
+  main();
+}
