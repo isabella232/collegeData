@@ -85,76 +85,12 @@ var parseSchoolTypes = function() {
 var parseImages = function() {
   return spawnPromise(__dirname + "/parseImages.js");
 };
-
-var loadAllSchools = function() {
-  // Load all schools.
-  var range = _.range(conf.minSchoolId, conf.maxSchoolId + 1);
-  var schools = {};
-  for (var i = conf.minSchoolId; i < conf.maxSchoolId + 1; i++) {
-    try {
-      schools[i] = require(__dirname + "/out/" + i + ".json");
-    } catch (e) {
-      continue;
-    }
-  }
-  return schools;
-};
-
-var matchSchool = function(schools, name) {
-  // Special cases
-  if (name === "Concordia College, Selma") {
-    name = "Concordia College Alabama";
-  }
-
-  var sname;
-  for (var schoolId in schools) {
-    sname = schools[schoolId].name;
-    if (!sname) {
-      continue;
-    }
-    if (sname === name) {
-      return schoolId;
-    }
-  }
-  return;
-};
-
+/**
+ * Merge all
+ */
 var mergeAll = function() {
-  // School types
-  var schoolTypes = require(__dirname + "/data/schoolTypes.json");
-  var schools = loadAllSchools();
-  // Military
-  _.each(schoolTypes.military, function(name) {
-    var schoolId = matchSchool(schools, name);
-    if (schoolId) {
-      schools[schoolId].military = true;
-    }
-  });
-  // Historically black
-  _.each(schoolTypes.historicallyBlack, function(name) {
-    var schoolId = matchSchool(schools, name);
-    if (schoolId) {
-      schools[schoolId].historicallyBlack = true;
-    }
-  });
-
-  // Images
-  var imageData = require(__dirname + "/imageData.json");
-  _.each(imageData, function(data, schoolId) {
-    schools[schoolId].schoolLogo = data.schoolLogo;
-    schools[schoolId].coverPhoto = data.coverPhoto;
-  });
-
-  return Promise.map(_.values(schools), function(school) {
-    if (school.schoolId === 1567) {
-      console.log(school.military);
-    }
-    return fs.writeFileAsync(
-      __dirname + "/out/" + school.idNumber + ".json",
-      JSON.stringify(school, null, 2)
-    );
-  });
-};
+  return spawnPromise(__dirname + "/mergeAll.js");
+}
 
 var pipeline = function() {
   statRawHtml().then(function(stats1) {
@@ -174,7 +110,7 @@ var pipeline = function() {
       });
     }
   }).then(function() {
-    return mergeAll();
+    mergeAll();
   }).then(function() {
     console.log("Done.");
   }).catch(function(e) {

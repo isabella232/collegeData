@@ -50,34 +50,6 @@ converters.booly = function(val) {
     return bool;
   }
 };
-converters.totalAndPercent = function(val) {
-  // e.g. 52% of 396 applicants were admitted
-  // or   28 (65.1%) of freshmen
-  // or   140 (52.2%)
-  if (typeof val !== "string") { return undefined; }
-  var percent = /(?:^|[^\d\.])([\d\.]+%)/.exec(val);
-  var total = /(?:^|[^\d])([\d\.]+)[^%]/.exec(val);
-  if ((percent && percent[1]) || (total && total[1])) {
-    return {
-      total: total && total[1] ? converters.numbery(total[1]) : null,
-      percent: percent && percent[1] ? converters.percenty(percent[1]) : null
-    }
-  }
-};
-converters.dashRange = function(val) {
-  // e.g. "460-580"
-  if (typeof val !== "string") { return undefined; }
-  var parts = val.split("-");
-  var low = converters.numbery(parts[0]);
-  var high = converters.numbery(parts[1]);
-  if (low !== null && high !== null) {
-    // REAL ugly: deal with source data that does ranges like "480-55"
-    if (low > high) {
-      high = high * 10;
-    }
-    return {low: low, high: high}
-  }
-};
 converters.cityState = function(val) {
   if (typeof val !== "string") { return undefined; }
   var parts = val.split(", ");
@@ -136,4 +108,44 @@ for (var key in converters) {
     }
   })(key);
 }
+
+//
+// These converters skip null checking.
+//
+
+module.exports.totalAndPercent = function(val) {
+  // e.g. 52% of 396 applicants were admitted
+  // or   28 (65.1%) of freshmen
+  // or   140 (52.2%)
+  var percent, total;
+  if (typeof val !== "string") {
+    percent = null;
+    total = null;
+  } else {
+    percent = /(?:^|[^\d\.])([\d\.]+%)/.exec(val);
+    total = /(?:^|[^\d])([\d\.]+)[^%]/.exec(val);
+  }
+  return {
+    total: total && total[1] ? converters.numbery(total[1]) : null,
+    percent: percent && percent[1] ? converters.percenty(percent[1]) : null
+  }
+};
+module.exports.dashRange = function(val) {
+  // e.g. "460-580"
+  var low, high;
+  if (typeof val !== "string") {
+    low = high = null;
+  } else {
+    var parts = val.split("-");
+    low = converters.numbery(parts[0]);
+    high = converters.numbery(parts[1]);
+    if (low !== null && high !== null) {
+      // REAL ugly: deal with source data that does ranges like "480-55"
+      if (low > high) {
+        high = high * 10;
+      }
+    }
+  }
+  return {low: low, high: high}
+};
 

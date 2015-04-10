@@ -4,14 +4,14 @@ var fs = require('fs');
 var path = require("path");
 var cheerio = require('cheerio');
 var Promise = require("bluebird");
-var util = require("./util.json");
+var util = require("./util.js");
 var conf = require("./conf.json");
 
 var converters = require('./converters');
 var c = converters;
 
 var HTML_PATH = path.join(__dirname, 'raw_html');
-var OUTPUT_PATH = path.join(__dirname, 'data');
+var OUTPUT_PATH = path.join(__dirname, 'out');
 
 var parsePageOne = function (html, schoolData) {
   var $ = cheerio.load(html);
@@ -452,7 +452,7 @@ var parsePageFive = function(html, schoolData) {
     } ,
     ROTC: c.stringy($('.onecolumntable').eq(-1).find('td').eq(-1).text())
   }
-}
+};
 
 var parsePageSix = function(html, schoolData) {
   var $ = cheerio.load(html);
