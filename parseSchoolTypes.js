@@ -15,9 +15,11 @@ var parseHistoricallyBlackSchools = function(data) {
   ).then(function(html) {
     var $ = cheerio.load(html);
 
+    var schools = [];
     $(".wikitable td:first-child a").each(function(i, elem) {
-      //console.log($(this).text());
+      schools.push($(this).text().trim());
     });
+    data['historicallyBlack'] = schools;
     return data;
   });
 }
@@ -27,6 +29,8 @@ var parseMilitarySchools = function(data) {
     __dirname + "/raw_html/https---en.wikipedia.org-wiki-List_of_United_States_military_schools_and_academies", 'utf-8'
   ).then(function(html) {
     var $ = cheerio.load(html);
+
+    var schools = [];
     $("#mw-content-text li").each(function(i, elem) {
       var text = $(this).text().trim();
       if (text.indexOf(" (") !== -1 && !/^[\d\^]/.test(text)) {
@@ -35,9 +39,10 @@ var parseMilitarySchools = function(data) {
         if (school.charAt(school.length - 1) === ",") {
           school = school.substring(0, school.length - 1);
         }
-        console.log(school);
+        schools.push(school.trim());
       }
     });
+    data['military'] = schools;
     return data;
   });
 };
@@ -55,9 +60,10 @@ var main = function() {
   }).then(function(data) {
     return parseMilitarySchools(data);
   }).then(function(data) {
-    return fs.writeFileAsync(datafile, data);
+    return fs.writeFileAsync(datafile, JSON.stringify(data, null, 2));
   }).then(function() {
-    console.log("woot!");
+  }).catch(function(e) {
+    throw e;
   });
 }
 

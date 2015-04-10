@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require("path");
 var cheerio = require('cheerio');
 var Promise = require("bluebird");
+var util = require("./util.json");
 var conf = require("./conf.json");
 
 var converters = require('./converters');
@@ -482,17 +483,12 @@ var parsePageSix = function(html, schoolData) {
   }
 };
 
-var slugify = function(url) {
-  return url.replace(/[^-a-zA-Z0-9_\.]/g, '-');
-};
 var urlTemplate = _.template(
   "http://www.collegedata.com/cs/data/college/college_pg0<%= page %>_tmpl.jhtml?schoolId=<%= idNumber %>"
 );
 var rawHtmlFilename = function(idNumber, page) {
-  return path.join(HTML_PATH, slugify(urlTemplate({idNumber: idNumber, page: page})));
+  return path.join(HTML_PATH, util.slugify(urlTemplate({idNumber: idNumber, page: page})));
 };
-
-
 
 var noData = [];
 var parseAll = function(concurrency) {

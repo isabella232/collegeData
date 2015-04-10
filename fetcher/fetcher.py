@@ -30,21 +30,33 @@ def generate_urls(start, end):
                 urls.append(url)
     return urls
 
-def wikipedi_urls(*titles):
+def wikipedia_urls():
+    titles = [
+        "List of historically black colleges and universities",
+        "List of United States military schools and academies",
+    ]
     urls = []
     for title in titles:
-        urls.append(
-            "https://en.wikipedia.org/wiki/{}".format(wikipedia_slugify_title(title))
-        )
+        url = "https://en.wikipedia.org/wiki/{}".format(wikipedia_slugify_title(title))
+        if not os.path.exists(output_filename(url)):
+            urls.append(url)
     return urls
+
+def linkedin_urls():
+    with open(os.path.join(BASE, "data", "linkedin.json")) as fh:
+        data = json.load(fh)
+        urls = []
+        for key, result in data.iteritems():
+            if not os.path.exists(output_filename(result['url'])):
+                urls.append(result['url'])
+        return urls
 
 class CollegeSpider(Spider):
     name = "collegespider"
 
-    start_urls = generate_urls(CONF['minSchoolId'], CONF['maxSchoolId']) + wikipedi_urls(
-        "List of historically black colleges and universities",
-        "List of United States military schools and academies",
-    )
+    start_urls = generate_urls(CONF['minSchoolId'], CONF['maxSchoolId']) + \
+        wikipedia_urls() + \
+        linkedin_urls()
 
     download_delay = CONF['throttle'] / 1000.
 
