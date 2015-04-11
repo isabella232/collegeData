@@ -345,9 +345,13 @@ var parsePageThree = function(html, schoolData) {
   if (email.substring(email.length - 1, email.length) === ".") {
     email = email.substring(0, email.length - 1);
   }
-  if (website === "http://www/nysid.edu/netpricecalculator") {
-    website = "http://www.nysid.edu/netpricecalculator";
-  }
+  var websiteHack = function(website) {
+    website = c.validWebsite(website);
+    if (website === "http://www/nysid.edu/netpricecalculator") {
+      website = "http://www.nysid.edu/netpricecalculator";
+    }
+    return website;
+  };
 
   var fafsaText = $('#section10').find('table').eq(-1).find('tr').last().text();
   var match = /FAFSA\s+Code\s+is\s+(\d+)/.exec(fafsaText);
@@ -367,8 +371,8 @@ var parsePageThree = function(html, schoolData) {
 
   schoolData.tuition.financialAid = {
     emailContact: c.validEmail(email),
-    website: c.validWebsite(website),
-    netPriceCalculator: c.validWebsite(newPriceCalculator ? newPriceCalculator.attribs.href : null),
+    website: websiteHack(website),
+    netPriceCalculator: websiteHack(newPriceCalculator ? newPriceCalculator.attribs.href : null),
     applicationDeadline: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-3).text()),
     awardDate: c.stringy($('.onecolumntable').eq(-8).find('td').eq(-2).text()),
     FAFSACode: fafsaCode,
