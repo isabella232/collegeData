@@ -122,6 +122,7 @@ module.exports.totalAndPercent = function(val) {
     percent = null;
     total = null;
   } else {
+    val = val.replace(/[,]/g, '')
     percent = /(?:^|[^\d\.])([\d\.]+%)/.exec(val);
     total = /(?:^|[^\d])([\d\.]+)[^%]/.exec(val);
   }

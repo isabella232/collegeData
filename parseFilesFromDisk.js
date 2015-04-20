@@ -26,20 +26,27 @@ var parsePageOne = function (html, schoolData) {
   var coed = $('.onecolumntable').eq(-7).find('td').eq(-5).text().trim();
   schoolData.gender = {'Yes': 'coed', 'No, men only': 'Men', 'No, women only': 'Women'}[coed] || null;
   schoolData.population = c.numbery($('.onecolumntable').eq(-7).find('td').eq(-4).text());
-  schoolData.women = c.totalAndPercent($('.onecolumntable').eq(-7).find('td').eq(-3).text());
-  schoolData.men = c.totalAndPercent($('.onecolumntable').eq(-7).find('td').eq(-2).text());
+  var womenText = $('.onecolumntable').eq(-7).find('td').eq(-3).text();
+  var menText = $('.onecolumntable').eq(-7).find('td').eq(-2).text();
+  schoolData.women = c.totalAndPercent(womenText);
+  schoolData.men = c.totalAndPercent(menText);
 
   var scoreHalfClassRange = function(col) {
     var text = $(".onecolumntable").eq(-5).find("td").eq(col).text();
-    var range;
-    var parts = text.split('average');
-    var average = c.numbery(parts[0]);
-    if (parts.length !== 2 || parts[1].indexOf('Not reported') !== -1) {
-      range = {low: null, high: null};
-    } else {
-      range = c.dashRange(parts[1].slice(0,8));
+    var match = /^(?:(\d+) average)?[\s]*(?:(\d+)-(\d+) range of middle 50\%)?$/.exec(text);
+    var ret;
+    if (match) {
+      ret = {
+        average: c.numbery(match[1]),
+        range: {low: c.numbery(match[2]), high: c.numbery(match[3])}
+      }
+    } else if (text === "Not reported") {
+      ret = {average: null, halfClassRange: {low: null, high: null}};
     }
-    return {average: average, halfClassRange: range};
+    if (ret) {
+      return ret;
+    }
+    throw new Error("Unexpected scoreHalfClassRange text: " + text);
   }
 
   schoolData.generalAdmissionsData = {

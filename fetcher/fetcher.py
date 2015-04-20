@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import random
 from scrapy import Spider
 
 BASE = os.path.join(os.path.dirname(__file__), "..")
@@ -17,6 +18,13 @@ def slugify_url(url):
 
 def wikipedia_slugify_title(title):
     return title.replace(" ", "_")
+
+def zip_code_demographics_urls():
+    codes = ["{:05}".format(i) for i in range(1, 100000)]
+    url = "http://zipwho.com/?zip={}&city=&filters=--_--_--_--&state=&mode=zip"
+    urls = [url.format(code) for code in codes]
+    random.shuffle(urls)
+    return urls
 
 def output_filename(url):
     return os.path.join(OUTPUT, slugify_url(url))
@@ -56,7 +64,8 @@ class CollegeSpider(Spider):
 
     start_urls = generate_urls(CONF['minSchoolId'], CONF['maxSchoolId']) + \
         wikipedia_urls() + \
-        linkedin_urls()
+        linkedin_urls() + \
+        zip_code_demographics_urls()
 
     download_delay = CONF['throttle'] / 1000.
 
