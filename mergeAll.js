@@ -75,6 +75,53 @@ var mergeAll = function() {
     schools[schoolId].coverPhoto = data.coverPhoto;
   });
 
+  // Neighbor GPA.  Clone the GPA score data from the school with the closest
+  // acceptance rate.
+  var sbar = []; // schools by acceptance rate
+  var schoolsWithoutGPA = [];
+  // Sort schools into those with and those without gpa data.  Ignore schools
+  // without ``acceptanceRate.percent``.
+  _.each(schools, function(school) {
+    var percent = school.generalAdmissionsData.acceptanceRate.percent;
+    if (percent) {
+      if (school.specificAdmissionsData.GPA.average) {
+        sbar.push([percent, school]);
+      } else {
+        schoolsWithoutGPA.push([percent, school]);
+      }
+    }
+  });
+  // Sort schools by acceptance rate
+  _.sortBy(sbar, function(s) { return s[0]; });
+  // For each school without GPA, assign GPA scores of the closest neighbor by
+  // acceptance rate.
+  schoolsWithoutGPA.forEach(function(percentSchool) {
+    var pos = _.sortedIndex(sbar, percentSchool, function(s) { return s[0] });
+    var chosen;
+    if (pos === 0) {
+      chosen = sbar[0];
+    } else if (pos === sbar.length - 1) {
+      chosen = sbar[sbar.length - 1];
+    } else if (pos === sbar.length) {
+      chosen = sbar[sbar.length - 1];
+    } else if (Math.abs(sbar[pos][0] - percentSchool[0]) <
+               Math.abs(sbar[pos + 1][0] - percentSchool[0])) {
+      chosen = sbar[pos];
+    } else {
+      chosen = sbar[pos + 1];
+    }
+    var chosenPercent = chosen[0];
+    var chosenSchool = chosen[1];
+    percentSchool[1].calculatedAdmissionsData = {
+      nearestGPA: {
+        school: chosenSchool.name,
+        acceptanceRatePercent: chosenPercent,
+        scores: chosenSchool.specificAdmissionsData.GPA
+      }
+    };
+  });
+
+
   return Promise.map(_.values(schools), function(school) {
     return fs.writeFileAsync(
       __dirname + "/out/" + school.idNumber + ".json",
