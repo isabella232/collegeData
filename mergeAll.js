@@ -158,7 +158,7 @@ var mergeAll = function() {
   assignScoresByAcceptanceRateNeighbor(schools, function(school) {
     return school.specificAdmissionsData.GPA.average;
   }, function(schoolWithout, chosen, percent) {
-    schoolWithout.calculatedAdmissionsData.nearestGPA = {
+    schoolWithout.calculatedAdmissionsData.GPA = {
       school: chosen.name,
       acceptanceRatePercent: percent,
       scores: chosen.specificAdmissionsData.GPA
