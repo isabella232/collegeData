@@ -38,7 +38,7 @@ var parsePageOne = function (html, schoolData) {
     if (match) {
       ret = {
         average: c.numbery(match[1]),
-        range: {low: c.numbery(match[2]), high: c.numbery(match[3])}
+        halfClassRange: {low: c.numbery(match[2]), high: c.numbery(match[3])}
       }
     } else if (text === "Not reported") {
       ret = {average: null, halfClassRange: {low: null, high: null}};
@@ -270,6 +270,12 @@ var parsePageTwo = function (html, schoolData) {
     }
   }
 
+  var financialNeedConsidered = {
+    "Financial need is not a consideration in the admissions process": false,
+    "Financial need is a consideration in the admissions process": true,
+    null: null
+  }[c.stringy($('.onecolumntable').eq(-6).find('td').eq(-1).text())]
+
   schoolData.specificAdmissionsData.applying = {
     address: c.stringy($('.onecolumntable').eq(-10).find('td').eq(-5).text() + " " + $('.onecolumntable').eq(-10).find('td').eq(-4).text()),
     phone: c.stringy($('.onecolumntable').eq(-10).find('td').eq(-3).text()),
@@ -298,7 +304,7 @@ var parsePageTwo = function (html, schoolData) {
       personalStatement: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-4).text()),
       numberOfRecLettersRequired: c.numbery($('.onecolumntable').eq(-6).find('td').eq(-3).text()),
       other: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-2).text()),
-      financialNeed: c.stringy($('.onecolumntable').eq(-6).find('td').eq(-1).text())
+      financialNeedConsidered: financialNeedConsidered
     }
   }
 };

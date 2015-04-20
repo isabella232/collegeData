@@ -44,6 +44,50 @@ var matchSchool = function(schools, name) {
   return;
 };
 
+/**
+ * Go through the list of given schools.  Filter out the schools that don't
+ * have ``generalAdmissionsData.acceptanceRate.percent``.  Sort the remaining
+ * into those that have a value returned by ``getter`` and those who don't.
+ * For those that don't, find the closest school by acceptance rate percent
+ * that does, and apply setter to it.
+ */
+function assignScoresByAcceptanceRateNeighbor(schools, getter, setter) {
+  var sbar = [];
+  var schoolsWithout = [];
+  _.each(schools, function(school) {
+    var percent = school.generalAdmissionsData.acceptanceRate.percent;
+    if (percent) {
+      var val = getter(school);
+      if (val) {
+        sbar.push([percent, school]);
+      } else {
+        schoolsWithout.push([percent, school]);
+      }
+    }
+  });
+  sbar = _.sortBy(sbar, function(s) { return s[0]; });
+  schoolsWithout.forEach(function(percentSchool) {
+    var pos = _.sortedIndex(sbar, percentSchool, function(s) { return s[0]; });
+    var chosen;
+    if (pos === 0) {
+      chosen = sbar[0];
+    } else if (pos === sbar.length - 1) {
+      chosen = sbar[sbar.length - 1];
+    } else if (pos === sbar.length) {
+      chosen = sbar[sbar.length - 1];
+    } else if (Math.abs(sbar[pos][0] - percentSchool[0]) <
+               Math.abs(sbar[pos + 1][0] - percentSchool[0])) {
+      chosen = sbar[pos];
+    } else {
+      chosen = sbar[pos + 1];
+    }
+    var chosenPercent = chosen[0];
+    var chosenSchool = chosen[1];
+    percentSchool[1].calculatedAdmissionsData = percentSchool[1].calculatedAdmissionsData || {};
+    setter(percentSchool[1], chosenSchool, chosenPercent);
+  });
+};
+
 var mergeAll = function() {
   // School types
   var schoolTypes = require(__dirname + "/data/schoolTypes.json");
@@ -75,51 +119,65 @@ var mergeAll = function() {
     schools[schoolId].coverPhoto = data.coverPhoto;
   });
 
-  // Neighbor GPA.  Clone the GPA score data from the school with the closest
-  // acceptance rate.
-  var sbar = []; // schools by acceptance rate
-  var schoolsWithoutGPA = [];
-  // Sort schools into those with and those without gpa data.  Ignore schools
-  // without ``acceptanceRate.percent``.
+  // SAT Composites. Calculate an SAT composite for the averages for each
+  // school that has them.
+  var satSum = function(scores) {
+    scores = _.without(scores, null);
+    var sum = _.reduce(scores, function(m, n) { return m + n }, 0);
+    switch (scores.length) {
+      case 0: return null;
+      case 1: return sum * 3;
+      case 2: return sum * 1.5;
+      case 3: return sum;
+      default: throw new Error("More than 3 SAT scores to average.");
+    }
+  };
   _.each(schools, function(school) {
-    var percent = school.generalAdmissionsData.acceptanceRate.percent;
-    if (percent) {
-      if (school.specificAdmissionsData.GPA.average) {
-        sbar.push([percent, school]);
-      } else {
-        schoolsWithoutGPA.push([percent, school]);
-      }
-    }
-  });
-  // Sort schools by acceptance rate
-  _.sortBy(sbar, function(s) { return s[0]; });
-  // For each school without GPA, assign GPA scores of the closest neighbor by
-  // acceptance rate.
-  schoolsWithoutGPA.forEach(function(percentSchool) {
-    var pos = _.sortedIndex(sbar, percentSchool, function(s) { return s[0] });
-    var chosen;
-    if (pos === 0) {
-      chosen = sbar[0];
-    } else if (pos === sbar.length - 1) {
-      chosen = sbar[sbar.length - 1];
-    } else if (pos === sbar.length) {
-      chosen = sbar[sbar.length - 1];
-    } else if (Math.abs(sbar[pos][0] - percentSchool[0]) <
-               Math.abs(sbar[pos + 1][0] - percentSchool[0])) {
-      chosen = sbar[pos];
-    } else {
-      chosen = sbar[pos + 1];
-    }
-    var chosenPercent = chosen[0];
-    var chosenSchool = chosen[1];
-    percentSchool[1].calculatedAdmissionsData = {
-      nearestGPA: {
-        school: chosenSchool.name,
-        acceptanceRatePercent: chosenPercent,
-        scores: chosenSchool.specificAdmissionsData.GPA
+    school.generalAdmissionsData.SATComposite = {
+      average: satSum([
+        school.generalAdmissionsData.SATMath.average,
+        school.generalAdmissionsData.SATReading.average,
+        school.generalAdmissionsData.SATWriting.average
+      ]),
+      halfClassRange: {
+        low: satSum([
+          school.generalAdmissionsData.SATMath.halfClassRange.low,
+          school.generalAdmissionsData.SATReading.halfClassRange.low,
+          school.generalAdmissionsData.SATWriting.halfClassRange.low,
+        ]),
+        high: satSum([
+          school.generalAdmissionsData.SATMath.halfClassRange.high,
+          school.generalAdmissionsData.SATReading.halfClassRange.high,
+          school.generalAdmissionsData.SATWriting.halfClassRange.high,
+        ]),
       }
     };
   });
+
+  // Neighbor GPA.
+  assignScoresByAcceptanceRateNeighbor(schools, function(school) {
+    return school.specificAdmissionsData.GPA.average;
+  }, function(schoolWithout, chosen, percent) {
+    schoolWithout.calculatedAdmissionsData.nearestGPA = {
+      school: chosen.name,
+      acceptanceRatePercent: percent,
+      scores: chosen.specificAdmissionsData.GPA
+    };
+  });
+
+  // Neighbor SAT / ACT.
+  _.each(["SATComposite", "SATMath", "SATReading", "SATWriting", "ACTComposite"], function(key) {
+    assignScoresByAcceptanceRateNeighbor(schools, function(school) {
+      return school.generalAdmissionsData[key].average;
+    }, function(schoolWithout, chosen, percent) {
+      schoolWithout.calculatedAdmissionsData[key] = {
+        chosen: chosen.name,
+        acceptanceRatePercent: percent,
+        scores: chosen.generalAdmissionsData[key]
+      }
+    });
+  });
+
 
 
   return Promise.map(_.values(schools), function(school) {
