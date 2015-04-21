@@ -171,7 +171,7 @@ var mergeAll = function() {
       return school.generalAdmissionsData[key].average;
     }, function(schoolWithout, chosen, percent) {
       schoolWithout.calculatedAdmissionsData[key] = {
-        chosen: chosen.name,
+        school: chosen.name,
         acceptanceRatePercent: percent,
         scores: chosen.generalAdmissionsData[key]
       }
@@ -179,6 +179,21 @@ var mergeAll = function() {
   });
 
 
+  // Slugs
+  var usedSlugs = {};
+  _.each(schools, function(school) {
+    if (school.name) {
+      var name = [school.name, school.city, school.state].join(" ");
+      var slug = name.toLowerCase().replace(/[^-a-z0-9]+/g, "-").replace(/-*$/, "");
+      if (usedSlugs[slug]) {
+        throw new Error("Duplicate slug " + slug + " " + usedSlugs[slug] + ", " + school.idNumber);
+      }
+      usedSlugs[slug] = school.idNumber;
+      school.slug = slug;
+    }
+  });
+
+  // TODO: assign regions
 
   return Promise.map(_.values(schools), function(school) {
     return fs.writeFileAsync(
