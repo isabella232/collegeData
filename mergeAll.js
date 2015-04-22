@@ -201,7 +201,23 @@ var mergeAll = function() {
     }
   });
 
-  // TODO: assign regions
+  // Weather
+  _.each(schools, function(school) {
+    if (school.campusSetting) {
+      var low = school.campusSetting.averageLowTempJanuary;
+      var high = school.campusSetting.averageHighTempSeptember;
+      var rainyDays = school.campusSetting.rainyDaysPerYear;
+      if (low && high && rainyDays) {
+        if (low > 45 && rainyDays < 150) {
+          school.weather = "flipFlops";
+        } else if (high < 80) {
+          school.weather = "frozenTundra";
+        } else {
+          school.weather = "allSeasons";
+        }
+      }
+    }
+  });
 
   return Promise.map(_.values(schools), function(school) {
     return fs.writeFileAsync(
