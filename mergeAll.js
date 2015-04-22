@@ -3,6 +3,7 @@ var _ = require("underscore");
 var Promise = require("bluebird");
 var fs = Promise.promisifyAll(require("fs"));
 var conf = require("./conf.json");
+var regions = require("us-regions");
 
 var loadAllSchools = function() {
   // Load all schools.
@@ -190,6 +191,13 @@ var mergeAll = function() {
       }
       usedSlugs[slug] = school.idNumber;
       school.slug = slug;
+    }
+  });
+
+  // Regions
+  _.each(schools, function(school) {
+    if (school.state) {
+      school.region = regions.region(school.state);
     }
   });
 

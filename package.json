@@ -12,6 +12,7 @@
     "leven": "^1.0.1",
     "request": "^2.45.0",
     "underscore": "~1.5.2",
+    "us-regions": "0.0.2",
     "util": "^0.10.3"
   }
 }
