@@ -33,3 +33,4 @@ fetcher/venv
 raw_html/*
 data/*
 out/*
+parsed_schools/*
