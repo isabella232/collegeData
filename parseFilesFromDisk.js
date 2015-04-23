@@ -11,7 +11,7 @@ var converters = require('./converters');
 var c = converters;
 
 var HTML_PATH = path.join(__dirname, 'raw_html');
-var OUTPUT_PATH = path.join(__dirname, 'out');
+var OUTPUT_PATH = path.join(__dirname, 'parsed_schools');
 
 var parsePageOne = function (html, schoolData) {
   var $ = cheerio.load(html);
@@ -516,7 +516,10 @@ var parseAll = function(concurrency) {
     1: parsePageOne, 2: parsePageTwo, 3: parsePageThree,
     4: parsePageFour, 5: parsePageFive, 6: parsePageSix
   };
+  // Create output directory if it doesn't exist yet.
+  try { fs.mkdirSync(OUTPUT_PATH) } catch (e) {}
 
+  // Parse 'em.
   return Promise.map(idRange, function(idNumber) {
     return Promise.resolve().then(function() {
       // Check that the files exist.

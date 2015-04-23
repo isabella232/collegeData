@@ -21,12 +21,14 @@ var parseLinkedIn = function(idUrl) {
   var url = idUrl.url;
   var path = __dirname + "/raw_html/" + util.slugify(url)
   return fs.readFileAsync(path, {encoding: 'utf-8'}).then(function(html) {
-    var logoLocation = html.search('("logoSrc")');
-    if (logoLocation) {
-      schoolLogo = html.substr(logoLocation, 109).split(',')[0].split('"')[3];
-    } else {
-      schoolLogo = null
+    var jsonMatch = /<!--(\{"content":.*\})-->/.exec(html);
+    try {
+      var data = JSON.parse(jsonMatch[1].replace(/\\u002d/g, '-'));
+    } catch (e) {
+      console.log(jsonMatch[1])
+      throw e;
     }
+    var schoolLogo = data && data.content && data.content.unifiedHeader && data.content.unifiedHeader.logoSrc || null;
 
     var $ = cheerio.load(html);
     coverPhoto = $('#college-cover-photo').find('.cover-photo').attr('data-li-src');
