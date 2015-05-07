@@ -116,10 +116,17 @@ var mergeAll = function() {
   });
 
   // Images
-  var imageData = require(__dirname + "/data/imageData.json");
-  _.each(imageData, function(data, schoolId) {
-    schools[schoolId].schoolLogo = data.schoolLogo;
-    schools[schoolId].coverPhoto = data.coverPhoto;
+  var images = fs.readdirSync(__dirname + "/images/");
+  images.forEach(function(image) {
+    var match = /(\d+)-(logo|cover)\.(png|jpg|gif)/.exec(image);
+    if (match) {
+      var url = conf.awsRoot + image;
+      if (match[2] === "logo") {
+        schools[match[1]].schoolLogo = url;
+      } else if (match[2] === "cover") {
+        schools[match[1]].coverPhoto = url;
+      }
+    }
   });
 
   // SAT Composites. Calculate an SAT composite for the averages for each

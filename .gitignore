@@ -30,7 +30,13 @@ node_modules
 # Python scrapy stuff
 *.pyc
 fetcher/venv
+
+# Raw data
 raw_html/*
 data/*
 out/*
+images/*
 parsed_schools/*
+
+# Credentials
+conf.json

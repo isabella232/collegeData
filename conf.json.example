@@ -1,0 +1,9 @@
+{
+    "minSchoolId": 6,
+    "maxSchoolId": 3341,
+    "throttle": 5000,
+    "awsRoot": "https://s3.amazonaws.com/admithub-college-images/",
+    "aws_bucket": "admithub-college-images",
+    "aws_access_key_id": "",
+    "aws_secret_access_key": ""
+}

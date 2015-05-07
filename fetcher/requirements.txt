@@ -1,3 +1,6 @@
 # Python requirements.  Install with virtualenv.
 scrapy
 service_identity
+
+# For uploads to s3
+boto
