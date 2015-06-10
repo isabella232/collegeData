@@ -59,30 +59,37 @@ function assignScoresByAcceptanceRateNeighbor(schools, getter, setter) {
   var schoolsWithout = [];
   _.each(schools, function(school) {
     var percent = school.generalAdmissionsData.acceptanceRate.percent;
+    var type = school.schoolType;
+    var military = school.military;
+    var historicallyBlack = school.historicallyBlack;
     if (percent) {
       var val = getter(school);
       if (val) {
-        sbar.push([percent, school]);
+        sbar.push([percent, school, type, military, historicallyBlack]);
       } else {
-        schoolsWithout.push([percent, school]);
+        schoolsWithout.push([percent, school, type, military, historicallyBlack]);
       }
     }
   });
   sbar = _.sortBy(sbar, function(s) { return s[0]; });
   schoolsWithout.forEach(function(percentSchool) {
-    var pos = _.sortedIndex(sbar, percentSchool, function(s) { return s[0]; });
+    // limit list of potential neighbors if the schools have similar gender, type, military and HBC values
+    newBar = _.filter(sbar, function(s) {
+      return s[3] === percentSchool[3] && s[4] === percentSchool[4];
+    });
+    var pos = _.sortedIndex(newBar, percentSchool, function(s) { return s[0]; });
     var chosen;
     if (pos === 0) {
-      chosen = sbar[0];
-    } else if (pos === sbar.length - 1) {
-      chosen = sbar[sbar.length - 1];
-    } else if (pos === sbar.length) {
-      chosen = sbar[sbar.length - 1];
-    } else if (Math.abs(sbar[pos][0] - percentSchool[0]) <
-               Math.abs(sbar[pos + 1][0] - percentSchool[0])) {
-      chosen = sbar[pos];
+      chosen = newBar[0];
+    } else if (pos === newBar.length - 1) {
+      chosen = newBar[newBar.length - 1];
+    } else if (pos === newBar.length) {
+      chosen = newBar[newBar.length - 1];
+    } else if (Math.abs(newBar[pos][0] - percentSchool[0]) <
+               Math.abs(newBar[pos + 1][0] - percentSchool[0])) {
+      chosen = newBar[pos];
     } else {
-      chosen = sbar[pos + 1];
+      chosen = newBar[pos + 1];
     }
     var chosenPercent = chosen[0];
     var chosenSchool = chosen[1];
@@ -98,6 +105,7 @@ var mergeAll = function() {
   _.each(schools, function(school) {
     school.military = false;
     school.historicallyBlack = false;
+    school.partner = false;
   });
 
   // Military
@@ -113,6 +121,11 @@ var mergeAll = function() {
     if (schoolId) {
       schools[schoolId].historicallyBlack = true;
     }
+  });
+
+  // Partner colleges
+  _.each(schoolTypes.partnerColleges, function(partnerIdNumber) {
+    schools[partnerIdNumber].partner = true;
   });
 
   // Images
@@ -289,6 +302,9 @@ var mergeAll = function() {
         small:  citySizeMap([0.66, 0.66, 0.33, 0.33, 0,    0,    0.33]),
         sticks: citySizeMap([1,    1,    0.66, 0.66, 0.33, 0.33, 0   ])
       };
+    }
+    if (school.partner) {
+      distances.partner = {true: 0.5, false: 1}[school.partner];
     }
   });
 
