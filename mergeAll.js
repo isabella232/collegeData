@@ -4,6 +4,8 @@ var Promise = require("bluebird");
 var fs = Promise.promisifyAll(require("fs"));
 var conf = require("./conf.json");
 var regions = require("us-regions");
+var nicheScores = require(__dirname + "/data/niche.json");
+var linkedInData = require(__dirname + "/data/linkedin.json");
 
 var OUTPUT_PATH = __dirname + "/out/";
 
@@ -21,6 +23,7 @@ var loadAllSchools = function() {
   return schools;
 };
 
+
 var matchSchool = function(schools, name) {
   // Special cases
   if (name === "Concordia College, Selma") {
@@ -36,16 +39,69 @@ var matchSchool = function(schools, name) {
       continue;
     }
     if (name === "Lincoln University of Missouri" &&
-        sname === "Lincoln University" &&
-        schools[schoolId].state === "MO") {
+      sname === "Lincoln University" &&
+      schools[schoolId].state === "MO") {
       return schoolId;
-    }
-    if (sname === name) {
-      return schoolId;
-    }
   }
-  return;
+  if (sname === name) {
+    return schoolId;
+  }
+}
+return;
 };
+
+/*
+* Helper functions for Niche Data
+*/
+var transformNicheScore = function(score){
+     //console.log(score);
+     var maxScore = 433;
+     var minScore = 66;
+     var range = maxScore - minScore;
+     //returning a score on a scale from 0-1 with 13 possible possible otcomes
+     var transformedScore = (score - minScore)/range;
+     //console.log(transformedScore);
+     return transformedScore;
+ }
+
+  var checkNicheProperty = function(schoolId, property) {
+      var school = nicheScores[schoolId];
+      var existingProperty = school["college-niche"] && school["college-niche"]["categoryStats"] && 
+                             school["college-niche"]["categoryStats"][property] &&  
+                             school["college-niche"]["categoryStats"][property]["category- grade"];
+      return existingProperty;
+  };
+
+  var getNicheProperty = function(schoolId, property) {  
+     var school = nicheScores[schoolId];
+     return parseInt(school["college-niche"]["categoryStats"][property]["category- grade"]);      
+  };
+
+  var createUniqueHashTag = function(hashtags, hashtag){
+   // console.log(hashtag);
+    if(hashtags.indexOf(hashtag)> -1){
+        var num = 0;
+        var temp = hashtag;
+        while(hashtags.indexOf(hashtag)> -1){
+          var post = num + "";
+          hashtag = temp + post;
+          num++;
+    } 
+  }
+   return hashtag;
+}
+
+var filterSchoolName = function(schoolname){
+  var nameWords = schoolname.split(' ');
+  var index = 0;
+  while(nameWords[index] === "The" || nameWords[index] === "of" || nameWords[index] === "University" 
+    ||  nameWords[index] === "College" || nameWords[index] === "School"){
+    index++;
+  }
+  return nameWords[index];
+
+
+}
 
 /**
  * Go through the list of given schools.  Filter out the schools that don't
@@ -54,7 +110,7 @@ var matchSchool = function(schools, name) {
  * For those that don't, find the closest school by acceptance rate percent
  * that does, and apply setter to it.
  */
-function assignScoresByAcceptanceRateNeighbor(schools, getter, setter) {
+ function assignScoresByAcceptanceRateNeighbor(schools, getter, setter) {
   var sbar = [];
   var schoolsWithout = [];
   _.each(schools, function(school) {
@@ -86,7 +142,7 @@ function assignScoresByAcceptanceRateNeighbor(schools, getter, setter) {
     } else if (pos === newBar.length) {
       chosen = newBar[newBar.length - 1];
     } else if (Math.abs(newBar[pos][0] - percentSchool[0]) <
-               Math.abs(newBar[pos + 1][0] - percentSchool[0])) {
+     Math.abs(newBar[pos + 1][0] - percentSchool[0])) {
       chosen = newBar[pos];
     } else {
       chosen = newBar[pos + 1];
@@ -163,18 +219,18 @@ var mergeAll = function() {
         school.generalAdmissionsData.SATMath.average,
         school.generalAdmissionsData.SATReading.average,
         school.generalAdmissionsData.SATWriting.average
-      ]),
+        ]),
       halfClassRange: {
         low: satSum([
           school.generalAdmissionsData.SATMath.halfClassRange.low,
           school.generalAdmissionsData.SATReading.halfClassRange.low,
           school.generalAdmissionsData.SATWriting.halfClassRange.low,
-        ]),
+          ]),
         high: satSum([
           school.generalAdmissionsData.SATMath.halfClassRange.high,
           school.generalAdmissionsData.SATReading.halfClassRange.high,
           school.generalAdmissionsData.SATWriting.halfClassRange.high,
-        ]),
+          ]),
       }
     };
   });
@@ -227,6 +283,97 @@ var mergeAll = function() {
     }
   });
 
+  _.each(schools, function(school) {
+    school["hashtag"] = school["idNumber"];
+  } );
+
+    //linkedIn Data
+  _.each(schools, function(school, schoolId){
+
+    if (linkedInData[schoolId]) {
+      var currentSchool = linkedInData[schoolId];
+      var schoolIds = _.map(currentSchool.similarschools, function(obj) {
+          return obj.id
+      });
+      school.similarSchools = schoolIds
+    }
+  });
+
+  // Niche data 
+  _.each(schools, function(school, schoolId) { 
+
+    if(nicheScores[schoolId]){ 
+       // Fooood     
+      if(checkNicheProperty(schoolId,"Campus Food") || checkNicheProperty(schoolId,"Off-Campus Dining")){
+        var campusFood = checkNicheProperty(schoolId,"Campus Food") ? getNicheProperty(schoolId,"Campus Food"): getNicheProperty(schoolId,"Off-Campus Dining");
+        var offCampusFood = checkNicheProperty(schoolId,"Off-Campus Dining") ? getNicheProperty(schoolId,"Off-Campus Dining") : getNicheProperty(schoolId,"Campus Food");
+        var foodRatingAverage = (campusFood + offCampusFood)/2;
+        var foodScore = transformNicheScore(foodRatingAverage);
+        school["food"] = foodScore;  
+      }else{
+        school["food"] = 0.5;
+      }
+      //Housing
+      if(checkNicheProperty(schoolId,"Campus Housing") || checkNicheProperty(schoolId,"Off-Campus Housing")) {
+         var campusHousing = checkNicheProperty(schoolId,"Campus Housing") ? getNicheProperty(schoolId,"Campus Housing"): getNicheProperty(schoolId,"Off-Campus Housing");
+         var offCampusHousing = checkNicheProperty(schoolId,"Off-Campus Housing") ? getNicheProperty(schoolId,"Off-Campus Housing") : getNicheProperty(schoolId,"Campus Housing");
+         var housingRatingAverage = (campusHousing + offCampusHousing) / 2; 
+         var housingScore = transformNicheScore(housingRatingAverage)
+         school["housing"] = housingScore;
+      }else{
+         school["housing"] = 0.5;
+      }  
+
+      //Parking
+      if(checkNicheProperty(schoolId,"Parking")){
+        var parkingScore = transformNicheScore(getNicheProperty(schoolId,"Parking"));
+        school["parking"] = parkingScore;
+      }else{
+        school["parking"] = 0.5;
+      }
+
+      //PartyScene
+       if(checkNicheProperty(schoolId,"Party Scene")){
+        var partyScore = transformNicheScore(getNicheProperty(schoolId,"Party Scene"));
+        school["party"] = partyScore;
+      }else{
+        school["party"] = 0.5;
+      }
+
+      //Safety
+       if(checkNicheProperty(schoolId,"Health & Safety")){
+        var safetyScore = transformNicheScore(getNicheProperty(schoolId,"Health & Safety"));
+        school["safety"] = safetyScore;
+      }else{
+        school["safety"] = 0.5;
+      }
+
+      //Transportation
+       if(checkNicheProperty(schoolId,"Transportation")){
+        var transportationScore = transformNicheScore(getNicheProperty(schoolId,"Transportation"));
+        school["transportation"] = transportationScore;
+      }else{
+        school["transportation"] = 0.5;
+      }
+
+      //Greek Life
+      if(checkNicheProperty(schoolId,"Greek Life")){
+        var greekLifeScore = transformNicheScore(getNicheProperty(schoolId, "Greek Life"))
+        school["fraternities"] = greekLifeScore;
+      }else{
+        school["fraternities"] = 0.5;
+      }
+   }else{
+         school["food"] = 0.5;
+         school["housing"] = 0.5;
+         school["parking"] = 0.5;
+         school["party"] = 0.5;
+         school["safety"] = 0.5;
+         school["transportation"] = 0.5;
+         school["fraternities"] = 0.5;
+   }    
+  });
+
   // Weather
   _.each(schools, function(school) {
     if (school.campusSetting) {
@@ -245,6 +392,24 @@ var mergeAll = function() {
     }
   });
 
+  // Generate Hashtags
+  var hashtags = [];
+  _.each(schools, function(school, schoolId) {
+    var hashtag;
+    if(school.campusSetting && school.campusSetting.sports && school.campusSetting.sports.mascot){
+      hashtag = createUniqueHashTag(hashtags, school.campusSetting.sports.mascot);
+    }else if(school.tuition && school.tuition.financialAid && school.tuition.financialAid.FAFSACode){
+      hashtag = school.tuition.financialAid.FAFSACode;
+    }else if(school.name){
+      var temp = filterSchoolName(school.name);
+      hashtag = createUniqueHashTag(hashtags, temp);
+    }
+    if(hashtag){
+      hashtags.push(hashtag);
+      school.hashtag = hashtag;
+    }
+  });
+
   // Distances. Construct an object that quantifies relationships between
   // between various semantic fields, for use in filtering. The keys in the
   // distance object should accord with user profile fields, and the value
@@ -257,6 +422,60 @@ var mergeAll = function() {
         frozenTundra: {frozenTundra: 0,   allSeasons: 0.5, flipFlops: 1  }[school.weather],
         allSeasons:   {frozenTundra: 0.5, allSeasons: 0,   flipFlops: 0.5}[school.weather],
         flipFlops:    {frozenTundra: 1,   allSeasons: 0.5, flipFlops: 0  }[school.weather]
+      };
+    }
+    if(!(typeof school.food === "undefined")){
+      f = school.food;
+      distances.food = {
+        shitty:    0,
+        good:      f > 0.5 ? 0 : (0.5-f),
+        gourmet:   1-f
+      };
+    }
+    if(!(typeof school.housing === "undefined")){
+       h = school.housing;
+       distances.housing = {
+        close:     0,
+        far:       (1-h)
+      };
+    }
+    if(!(typeof school.parking === "undefined")){
+       p = school.parking;
+       distances.parking = {
+        nocar:      0,
+        car:       (1-p)
+      };
+    }
+    if(!(typeof school.party === "undefined")){
+       p = school.party;
+       distances.nightLife = {
+        dorm:      0,
+        bigGame:   0,
+        party:     1-p,
+        show:      0
+      };
+    }
+    if(!(typeof school.safety === "undefined")){
+       s = school.safety;
+       distances.safety = {
+        Female:  1-s,
+        Male:    0,
+        Other:   1-s
+      };
+    }
+    if(!(typeof school.transportation === "undefined")){
+       t = school.transportation;
+       distances.transportation = {
+        car:     0,
+        nocar:   1-t
+      };
+    }
+    if(!(typeof school.fraternities === "undefined")){
+       f = school.fraternities;
+       distances.fraternities = {
+        hate:       0,
+        whatever:   0,
+        love:       1-f
       };
     }
     if (school.region) {
@@ -318,7 +537,7 @@ var mergeAll = function() {
     return fs.writeFileAsync(
       OUTPUT_PATH + school.idNumber + ".json",
       JSON.stringify(school, null, 2)
-    );
+      );
   });
 };
 
