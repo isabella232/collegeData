@@ -75,7 +75,7 @@ function assignScoresByAcceptanceRateNeighbor(schools, getter, setter) {
   schoolsWithout.forEach(function(percentSchool) {
     // limit list of potential neighbors if the schools have similar gender, type, military and HBC values
     newBar = _.filter(sbar, function(s) {
-      return s[3] === percentSchool[3] && s[4] === percentSchool[4];
+      return s[2] === percentSchool[2] && s[3] === percentSchool[3] && s[4] === percentSchool[4];
     });
     var pos = _.sortedIndex(newBar, percentSchool, function(s) { return s[0]; });
     var chosen;
@@ -91,10 +91,12 @@ function assignScoresByAcceptanceRateNeighbor(schools, getter, setter) {
     } else {
       chosen = newBar[pos + 1];
     }
-    var chosenPercent = chosen[0];
-    var chosenSchool = chosen[1];
-    percentSchool[1].calculatedAdmissionsData = percentSchool[1].calculatedAdmissionsData || {};
-    setter(percentSchool[1], chosenSchool, chosenPercent);
+    if (chosen) { 
+      var chosenPercent = chosen[0];
+      var chosenSchool = chosen[1];
+      percentSchool[1].calculatedAdmissionsData = percentSchool[1].calculatedAdmissionsData || {};
+      setter(percentSchool[1], chosenSchool, chosenPercent);
+    }
   });
 };
 
@@ -186,6 +188,7 @@ var mergeAll = function() {
       acceptanceRatePercent: percent,
       scores: chosen.specificAdmissionsData.GPA
     };
+    console.log(chosen.name, schoolWithout.calculatedAdmissionsData);
   });
 
   // Neighbor SAT / ACT.
@@ -303,9 +306,9 @@ var mergeAll = function() {
         sticks: citySizeMap([1,    1,    0.66, 0.66, 0.33, 0.33, 0   ])
       };
     }
-    if (school.partner) {
-      distances.partner = {true: 0.5, false: 1}[school.partner];
-    }
+
+    distances.partner = {true: 0.5, false: 1}[school.partner];
+
   });
 
   // Create output directory if it doesn't exist yet.
