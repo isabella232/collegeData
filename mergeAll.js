@@ -6,6 +6,7 @@ var conf = require("./conf.json");
 var regions = require("us-regions");
 var nicheScores = require(__dirname + "/data/niche.json");
 var linkedInData = require(__dirname + "/data/linkedin.json");
+var commonAppData = require(__dirname + "/data/supplementQustions.json");
 
 var OUTPUT_PATH = __dirname + "/out/";
 
@@ -88,7 +89,7 @@ var transformNicheScore = function(score){
           num++;
     } 
   }
-   return hashtag;
+   return "#" + hashtag.toLowerCase();
 }
 
 var filterSchoolName = function(schoolname){
@@ -283,9 +284,11 @@ var mergeAll = function() {
     }
   });
 
-  _.each(schools, function(school) {
-    school["hashtag"] = school["idNumber"];
-  } );
+  // Generate Hashtag
+  // We removed this from the data pipeline so we don't clobber the hashtags in our current production database.  Be Aware!!!
+  // _.each(schools, function(school) {
+  //   school["hashtag"] = school["idNumber"];
+  // } );
 
     //linkedIn Data
   _.each(schools, function(school, schoolId){
@@ -299,17 +302,22 @@ var mergeAll = function() {
     }
   });
 
+  //Common Application Supplement Data
+  _.each(commonAppData, function(commonAppSchool) {
+    schools[commonAppSchool.id].specificAdmissionsData.applying.commonApplication.supplementQustions = commonAppSchool.questions;
+  });
+
   // Niche data 
   _.each(schools, function(school, schoolId) { 
 
-    if(nicheScores[schoolId]){ 
+    if(nicheScores[schoolId]){
        // Fooood     
       if(checkNicheProperty(schoolId,"Campus Food") || checkNicheProperty(schoolId,"Off-Campus Dining")){
         var campusFood = checkNicheProperty(schoolId,"Campus Food") ? getNicheProperty(schoolId,"Campus Food"): getNicheProperty(schoolId,"Off-Campus Dining");
         var offCampusFood = checkNicheProperty(schoolId,"Off-Campus Dining") ? getNicheProperty(schoolId,"Off-Campus Dining") : getNicheProperty(schoolId,"Campus Food");
         var foodRatingAverage = (campusFood + offCampusFood)/2;
         var foodScore = transformNicheScore(foodRatingAverage);
-        school["food"] = foodScore;  
+        school["food"] = foodScore;
       }else{
         school["food"] = 0.5;
       }
@@ -322,7 +330,7 @@ var mergeAll = function() {
          school["housing"] = housingScore;
       }else{
          school["housing"] = 0.5;
-      }  
+      }
 
       //Parking
       if(checkNicheProperty(schoolId,"Parking")){
@@ -371,7 +379,7 @@ var mergeAll = function() {
          school["safety"] = 0.5;
          school["transportation"] = 0.5;
          school["fraternities"] = 0.5;
-   }    
+   }
   });
 
   // Weather
@@ -396,8 +404,9 @@ var mergeAll = function() {
   var hashtags = [];
   _.each(schools, function(school, schoolId) {
     var hashtag;
+    var mascot = school.campusSetting.sports.mascot;
     if(school.campusSetting && school.campusSetting.sports && school.campusSetting.sports.mascot){
-      hashtag = createUniqueHashTag(hashtags, school.campusSetting.sports.mascot);
+      hashtag = mascot.split(' ')[0] === "The" ? createUniqueHashTag(hashtags, mascot.split(" ")[1]) : createUniqueHashTag(hashtags, mascot.split(" ")[0]);
     }else if(school.tuition && school.tuition.financialAid && school.tuition.financialAid.FAFSACode){
       hashtag = school.tuition.financialAid.FAFSACode;
     }else if(school.name){
